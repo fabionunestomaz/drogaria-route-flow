@@ -96,7 +96,7 @@ const App = () => {
                 </ProtectedRoute>
               } />
               
-              <Route path="/route/:batchId" element={
+              <Route path="/route-details/:batchId" element={
                 <ProtectedRoute>
                   <RouteDetails />
                 </ProtectedRoute>

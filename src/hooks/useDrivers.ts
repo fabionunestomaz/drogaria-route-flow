@@ -22,8 +22,12 @@ export const useDrivers = () => {
       const { data, error } = await supabase
         .from('drivers')
         .select(`
-          *,
-          profiles:profiles(name, phone)
+          id,
+          user_id,
+          approved,
+          shift_status,
+          vehicle_type,
+          profiles!drivers_user_id_fkey(name, phone)
         `)
         .eq('approved', true)
         .order('shift_status', { ascending: false });
