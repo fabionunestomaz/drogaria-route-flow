@@ -2,3 +2,6 @@ project_id = "dnflkxdyfmuubgjnfshe"
 
 [functions.tracking-public]
 verify_jwt = false
+
+[functions.register-driver]
+verify_jwt = true

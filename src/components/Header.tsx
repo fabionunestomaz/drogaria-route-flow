@@ -2,6 +2,14 @@ import { Moon, Sun, Menu, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Sheet,
   SheetContent,
@@ -11,6 +19,7 @@ import {
 const Header = () => {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   const navLinks = [
     { href: "/", label: "Início" },
@@ -61,6 +70,25 @@ const Header = () => {
             )}
           </Button>
 
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full touch-target">
+                  <Avatar>
+                    <AvatarFallback>{user.email?.[0].toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={signOut}>Sair</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Button asChild variant="default" size="sm" className="hidden md:flex">
+              <Link to="/auth">Entrar</Link>
+            </Button>
+          )}
+
           {/* Mobile Navigation */}
           <Sheet>
             <SheetTrigger asChild className="md:hidden">
@@ -84,6 +112,14 @@ const Header = () => {
                     {link.label}
                   </Link>
                 ))}
+                {!user && (
+                  <Link
+                    to="/auth"
+                    className="text-lg font-medium transition-colors hover:text-primary touch-target text-muted-foreground"
+                  >
+                    Entrar
+                  </Link>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
