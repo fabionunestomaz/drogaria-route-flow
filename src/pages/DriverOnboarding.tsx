@@ -48,7 +48,7 @@ export default function DriverOnboarding() {
       const plate = formData.get('plate') as string;
 
       console.log('🚀 Iniciando cadastro de motorista...');
-      console.log('📤 Fazendo upload dos documentos...');
+      console.log('📤 Fase 1: Upload dos documentos...');
 
       const [cnhFrontUrl, cnhBackUrl, selfieUrl] = await Promise.all([
         uploadFile(cnhFront, `${user!.id}/cnh-front-${Date.now()}.jpg`),
@@ -56,31 +56,39 @@ export default function DriverOnboarding() {
         uploadFile(selfie, `${user!.id}/selfie-${Date.now()}.jpg`),
       ]);
 
-      console.log('✅ Documentos enviados com sucesso');
-      console.log('📝 Registrando motorista no sistema...');
+      console.log('✅ Upload concluído com sucesso');
+      console.log('📦 Fase 2: Preparando dados para registro...');
+      
+      const payload = {
+        cnh_number: cnhNumber,
+        cnh_front_url: cnhFrontUrl,
+        cnh_back_url: cnhBackUrl,
+        selfie_url: selfieUrl,
+        vehicle_type: vehicleType,
+        plate,
+      };
+      
+      console.log('📦 Payload:', payload);
+      console.log('📞 Fase 3: Chamando edge function register-driver...');
 
       const { data, error } = await supabase.functions.invoke('register-driver', {
-        body: {
-          cnh_number: cnhNumber,
-          cnh_front_url: cnhFrontUrl,
-          cnh_back_url: cnhBackUrl,
-          selfie_url: selfieUrl,
-          vehicle_type: vehicleType,
-          plate,
-        },
+        body: payload,
       });
+
+      console.log('📥 Resposta da edge function:', { data, error });
 
       if (error) {
         console.error('❌ Erro ao invocar edge function:', error);
         throw error;
       }
 
-      console.log('✅ Cadastro registrado:', data);
+      console.log('✅ Cadastro registrado com sucesso!');
 
       toast.success('Cadastro enviado!', {
         description: 'Aguarde a aprovação do administrador.',
       });
 
+      console.log('🔄 Atualizando roles e redirecionando...');
       await refreshRoles();
       navigate('/driver-pending');
 
