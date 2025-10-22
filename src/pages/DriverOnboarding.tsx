@@ -47,11 +47,17 @@ export default function DriverOnboarding() {
       const cnhNumber = formData.get('cnh_number') as string;
       const plate = formData.get('plate') as string;
 
+      console.log('🚀 Iniciando cadastro de motorista...');
+      console.log('📤 Fazendo upload dos documentos...');
+
       const [cnhFrontUrl, cnhBackUrl, selfieUrl] = await Promise.all([
         uploadFile(cnhFront, `${user!.id}/cnh-front-${Date.now()}.jpg`),
         uploadFile(cnhBack, `${user!.id}/cnh-back-${Date.now()}.jpg`),
         uploadFile(selfie, `${user!.id}/selfie-${Date.now()}.jpg`),
       ]);
+
+      console.log('✅ Documentos enviados com sucesso');
+      console.log('📝 Registrando motorista no sistema...');
 
       const { data, error } = await supabase.functions.invoke('register-driver', {
         body: {
@@ -64,16 +70,22 @@ export default function DriverOnboarding() {
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erro ao invocar edge function:', error);
+        throw error;
+      }
+
+      console.log('✅ Cadastro registrado:', data);
 
       toast.success('Cadastro enviado!', {
         description: 'Aguarde a aprovação do administrador.',
       });
 
       await refreshRoles();
-      navigate('/motoboy');
+      navigate('/driver-pending');
 
     } catch (error: any) {
+      console.error('❌ Erro ao cadastrar motorista:', error);
       toast.error('Erro ao enviar cadastro', { description: error.message });
     } finally {
       setLoading(false);

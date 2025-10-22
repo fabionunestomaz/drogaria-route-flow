@@ -10,6 +10,7 @@ import Header from "@/components/Header";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import DriverOnboarding from "./pages/DriverOnboarding";
+import DriverPending from "./pages/DriverPending";
 import Cliente from "./pages/Cliente";
 import Motoboy from "./pages/Motoboy";
 import Admin from "./pages/Admin";
@@ -63,6 +64,12 @@ const App = () => {
               <Route path="/driver-onboarding" element={
                 <ProtectedRoute>
                   <DriverOnboarding />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/driver-pending" element={
+                <ProtectedRoute requireRole="driver">
+                  <DriverPending />
                 </ProtectedRoute>
               } />
               

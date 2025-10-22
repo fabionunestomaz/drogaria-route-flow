@@ -19,6 +19,7 @@ import {
 import { useAdminData } from "@/hooks/useAdminData";
 import { useDrivers } from "@/hooks/useDrivers";
 import { useAdminDeliveryRequests } from "@/hooks/useAdminDeliveryRequests";
+import { useDriverApprovals } from "@/hooks/useDriverApprovals";
 import RouteMap from "@/components/RouteMap";
 import {
   AlertDialog,
@@ -43,6 +44,7 @@ const Admin = () => {
   const { batches, kpis, loading, deleteBatch, updateBatchStatus, reassignDriver } = useAdminData();
   const { requests: deliveryRequests, loading: loadingRequests, deleteRequest } = useAdminDeliveryRequests();
   const { drivers } = useDrivers();
+  const { pendingDrivers, loading: loadingDrivers, approveDriver, rejectDriver } = useDriverApprovals();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
@@ -152,7 +154,7 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="monitor" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="monitor">
                 <MapPin className="h-4 w-4 mr-2" />
                 Monitor
@@ -160,6 +162,13 @@ const Admin = () => {
               <TabsTrigger value="requests">
                 <AlertCircle className="h-4 w-4 mr-2" />
                 Solicitações
+              </TabsTrigger>
+              <TabsTrigger value="drivers">
+                <UserPlus className="h-4 w-4 mr-2" />
+                Motoristas
+                {pendingDrivers.length > 0 && (
+                  <Badge className="ml-2 bg-red-500">{pendingDrivers.length}</Badge>
+                )}
               </TabsTrigger>
               <TabsTrigger value="planner">
                 <Package className="h-4 w-4 mr-2" />
@@ -365,6 +374,119 @@ const Admin = () => {
                             >
                               <Trash2 className="h-4 w-4 mr-1" />
                               Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="drivers" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-4">
+                  Motoristas Aguardando Aprovação ({pendingDrivers.length})
+                </h2>
+
+                {loadingDrivers ? (
+                  <Card className="p-6">
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  </Card>
+                ) : pendingDrivers.length === 0 ? (
+                  <Card className="p-6">
+                    <div className="text-center">
+                      <UserPlus className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-lg font-medium mb-2">Nenhum motorista aguardando aprovação</p>
+                      <p className="text-sm text-muted-foreground">
+                        Novos cadastros de motoristas aparecerão aqui
+                      </p>
+                    </div>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingDrivers.map((driver) => (
+                      <Card key={driver.id} className="p-6">
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <h3 className="text-lg font-semibold">{driver.profiles?.name || 'Nome não informado'}</h3>
+                              <p className="text-sm text-muted-foreground">{driver.profiles?.phone || 'Telefone não informado'}</p>
+                              <p className="text-sm text-muted-foreground mt-1">CNH: {driver.cnh_number}</p>
+                              <p className="text-sm text-muted-foreground">Veículo: {driver.vehicle_type} - {driver.plate}</p>
+                              <p className="text-xs text-muted-foreground mt-2">
+                                Cadastrado em: {new Date(driver.created_at).toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                            <Badge className="bg-yellow-500">Pendente</Badge>
+                          </div>
+
+                          <div className="grid grid-cols-3 gap-4">
+                            <a 
+                              href={driver.cnh_front_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <div className="aspect-video rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors">
+                                <img 
+                                  src={driver.cnh_front_url} 
+                                  alt="CNH Frente" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-xs text-center mt-2 text-muted-foreground">CNH Frente</p>
+                            </a>
+                            <a 
+                              href={driver.cnh_back_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <div className="aspect-video rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors">
+                                <img 
+                                  src={driver.cnh_back_url} 
+                                  alt="CNH Verso" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-xs text-center mt-2 text-muted-foreground">CNH Verso</p>
+                            </a>
+                            <a 
+                              href={driver.selfie_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer"
+                              className="block"
+                            >
+                              <div className="aspect-video rounded-lg overflow-hidden border-2 border-border hover:border-primary transition-colors">
+                                <img 
+                                  src={driver.selfie_url} 
+                                  alt="Selfie" 
+                                  className="w-full h-full object-cover"
+                                />
+                              </div>
+                              <p className="text-xs text-center mt-2 text-muted-foreground">Selfie</p>
+                            </a>
+                          </div>
+
+                          <div className="flex gap-2">
+                            <Button 
+                              onClick={() => approveDriver(driver.id)}
+                              className="flex-1"
+                            >
+                              <CheckCircle className="h-4 w-4 mr-2" />
+                              Aprovar
+                            </Button>
+                            <Button 
+                              onClick={() => rejectDriver(driver.id)}
+                              variant="destructive"
+                              className="flex-1"
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Rejeitar
                             </Button>
                           </div>
                         </div>

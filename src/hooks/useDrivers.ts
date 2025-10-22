@@ -27,7 +27,7 @@ export const useDrivers = () => {
           approved,
           shift_status,
           vehicle_type,
-          profiles!drivers_user_id_fkey(name, phone)
+          profiles:user_id (name, phone)
         `)
         .eq('approved', true)
         .order('shift_status', { ascending: false });
