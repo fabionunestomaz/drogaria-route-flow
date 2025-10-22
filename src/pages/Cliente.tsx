@@ -6,14 +6,19 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Search, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import ShareTrackingButton from "@/components/ShareTrackingButton";
 
 const Cliente = () => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
+  const [trackingToken, setTrackingToken] = useState<string | null>(null);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Pedido criado com sucesso! (Demo)");
+    // Simulate creating a ride with tracking token
+    const mockToken = crypto.randomUUID();
+    setTrackingToken(mockToken);
+    toast.success("Pedido criado com sucesso! Compartilhe o link de rastreamento.");
   };
 
   return (
@@ -121,9 +126,14 @@ const Cliente = () => {
                   </div>
                 </div>
 
-                <Button type="submit" className="w-full touch-target shadow-glow" size="lg">
-                  Solicitar Entrega
-                </Button>
+                <div className="flex gap-2">
+                  <Button type="submit" className="flex-1 touch-target shadow-glow" size="lg">
+                    Solicitar Entrega
+                  </Button>
+                  {trackingToken && (
+                    <ShareTrackingButton trackingToken={trackingToken} />
+                  )}
+                </div>
               </div>
             </form>
           </Tabs>

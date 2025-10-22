@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import Cliente from "./pages/Cliente";
 import Motoboy from "./pages/Motoboy";
 import Admin from "./pages/Admin";
+import TrackingPublic from "./pages/TrackingPublic";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/cliente" element={<Cliente />} />
             <Route path="/motoboy" element={<Motoboy />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/track/:token" element={<TrackingPublic />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
