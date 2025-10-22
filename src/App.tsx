@@ -20,27 +20,9 @@ import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
 import NewRoute from "./pages/NewRoute";
 import RouteDetails from "./pages/RouteDetails";
-import MapboxTokenInput from "./components/MapboxTokenInput";
-import { hasMapboxToken } from "./lib/mapboxConfig";
-
 const queryClient = new QueryClient();
 
 const App = () => {
-  const hasToken = hasMapboxToken();
-
-  if (!hasToken) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <TooltipProvider>
-            <Toaster />
-            <MapboxTokenInput />
-          </TooltipProvider>
-        </ThemeProvider>
-      </QueryClientProvider>
-    );
-  }
-
   return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark">

@@ -1,12 +1,7 @@
 // Token público do Mapbox - seguro para uso no frontend
-// Obtenha seu token em: https://account.mapbox.com/access-tokens/
+// Configure em .env como VITE_MAPBOX_TOKEN
 
-export const MAPBOX_PUBLIC_TOKEN = localStorage.getItem('mapbox_token') || '';
-
-export const setMapboxToken = (token: string) => {
-  localStorage.setItem('mapbox_token', token);
-  window.location.reload();
-};
+export const MAPBOX_PUBLIC_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN || '';
 
 export const hasMapboxToken = () => {
   return MAPBOX_PUBLIC_TOKEN.length > 0;

@@ -97,9 +97,17 @@ const Motoboy = () => {
           <Card className="p-8 text-center">
             <Package className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
             <h3 className="text-xl font-semibold mb-2">Nenhuma rota ativa</h3>
-            <p className="text-muted-foreground">
-              Você não possui rotas atribuídas no momento
+            <p className="text-muted-foreground mb-4">
+              Você não possui rotas atribuídas no momento. Aguarde até que o administrador crie e atribua uma nova rota para você.
             </p>
+            <div className="bg-muted/50 rounded-lg p-4 text-sm text-left">
+              <p className="font-medium mb-2">💡 Próximos passos:</p>
+              <ul className="space-y-1 text-muted-foreground">
+                <li>• Aguarde a atribuição de uma rota pelo administrador</li>
+                <li>• Quando uma rota for atribuída, ela aparecerá aqui automaticamente</li>
+                <li>• Você receberá todas as informações necessárias para as entregas</li>
+              </ul>
+            </div>
           </Card>
         ) : (
           <>
