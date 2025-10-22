@@ -7,7 +7,7 @@ import { MapPin } from 'lucide-react';
 
 interface AddressAutocompleteProps {
   value: string;
-  onChange: (address: string, coordinates?: [number, number]) => void;
+  onChange: (address: string, coordinates?: { lat: number; lng: number }) => void;
   placeholder?: string;
   className?: string;
 }
@@ -62,7 +62,7 @@ const AddressAutocomplete = ({
 
   const handleSelect = (result: GeocodingResult) => {
     setQuery(result.place_name);
-    onChange(result.place_name, result.center);
+    onChange(result.place_name, { lat: result.center[1], lng: result.center[0] });
     setIsOpen(false);
     setSuggestions([]);
   };

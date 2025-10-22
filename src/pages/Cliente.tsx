@@ -15,8 +15,8 @@ import { calculateDistance, geocodeAddress } from "@/lib/mapbox";
 const Cliente = () => {
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
-  const [originCoords, setOriginCoords] = useState<[number, number] | null>(null);
-  const [destCoords, setDestCoords] = useState<[number, number] | null>(null);
+  const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [trackingToken, setTrackingToken] = useState<string | null>(null);
   const [cepOrigin, setCepOrigin] = useState("");
   const [cepDest, setCepDest] = useState("");
@@ -27,8 +27,8 @@ const Cliente = () => {
   const calculateRoute = () => {
     if (originCoords && destCoords) {
       const dist = calculateDistance(
-        originCoords[1], originCoords[0],
-        destCoords[1], destCoords[0]
+        originCoords.lat, originCoords.lng,
+        destCoords.lat, destCoords.lng
       );
       setDistance(dist);
       const time = Math.round(dist / 30 * 60); // 30km/h média
@@ -45,10 +45,10 @@ const Cliente = () => {
       if (result) {
         if (type === 'origin') {
           setOrigin(address);
-          setOriginCoords(result.center);
+          setOriginCoords({ lat: result.center[1], lng: result.center[0] });
         } else {
           setDestination(address);
-          setDestCoords(result.center);
+          setDestCoords({ lat: result.center[1], lng: result.center[0] });
         }
         toast.success("CEP encontrado!");
       }
@@ -182,17 +182,17 @@ const Cliente = () => {
                     label="Clique no mapa para selecionar a origem"
                     onSelect={(address, coords) => {
                       setOrigin(address);
-                      setOriginCoords(coords);
+                      setOriginCoords({ lat: coords.lat, lng: coords.lng });
                       toast.success("Origem selecionada!");
                     }}
                   />
                 ) : !destCoords ? (
                   <MapPicker
                     label="Clique no mapa para selecionar o destino"
-                    initialCenter={originCoords}
+                    initialCenter={[originCoords.lng, originCoords.lat]}
                     onSelect={(address, coords) => {
                       setDestination(address);
-                      setDestCoords(coords);
+                      setDestCoords({ lat: coords.lat, lng: coords.lng });
                       calculateRoute();
                       toast.success("Destino selecionado!");
                     }}

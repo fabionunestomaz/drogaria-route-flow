@@ -15,6 +15,10 @@ import Motoboy from "./pages/Motoboy";
 import Admin from "./pages/Admin";
 import TrackingPublic from "./pages/TrackingPublic";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
+import Customers from "./pages/Customers";
+import NewRoute from "./pages/NewRoute";
+import RouteDetails from "./pages/RouteDetails";
 import MapboxTokenInput from "./components/MapboxTokenInput";
 import { hasMapboxToken } from "./lib/mapboxConfig";
 
@@ -71,6 +75,30 @@ const App = () => {
               <Route path="/admin" element={
                 <ProtectedRoute requireRole="admin">
                   <Admin />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/settings" element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/customers" element={
+                <ProtectedRoute>
+                  <Customers />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/new-route" element={
+                <ProtectedRoute>
+                  <NewRoute />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/route/:batchId" element={
+                <ProtectedRoute>
+                  <RouteDetails />
                 </ProtectedRoute>
               } />
               

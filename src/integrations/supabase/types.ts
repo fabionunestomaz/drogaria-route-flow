@@ -14,6 +14,147 @@ export type Database = {
   }
   public: {
     Tables: {
+      customers: {
+        Row: {
+          address: string
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          name: string
+          notes: string | null
+          pharmacy_id: string
+          phone: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          name: string
+          notes?: string | null
+          pharmacy_id: string
+          phone: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          name?: string
+          notes?: string | null
+          pharmacy_id?: string
+          phone?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      deliveries: {
+        Row: {
+          address: string
+          batch_id: string
+          created_at: string
+          customer_id: string
+          delivered_at: string | null
+          id: string
+          lat: number
+          lng: number
+          notes: string | null
+          order_number: string
+          proof_photo_url: string | null
+          sequence: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          address: string
+          batch_id: string
+          created_at?: string
+          customer_id: string
+          delivered_at?: string | null
+          id?: string
+          lat: number
+          lng: number
+          notes?: string | null
+          order_number: string
+          proof_photo_url?: string | null
+          sequence?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string
+          batch_id?: string
+          created_at?: string
+          customer_id?: string
+          delivered_at?: string | null
+          id?: string
+          lat?: number
+          lng?: number
+          notes?: string | null
+          order_number?: string
+          proof_photo_url?: string | null
+          sequence?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deliveries_batch_id_fkey"
+            columns: ["batch_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_batches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_batches: {
+        Row: {
+          created_at: string
+          driver_id: string | null
+          id: string
+          optimized_route: Json | null
+          pharmacy_id: string
+          status: string
+          total_distance: number | null
+          total_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          optimized_route?: Json | null
+          pharmacy_id: string
+          status?: string
+          total_distance?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          driver_id?: string | null
+          id?: string
+          optimized_route?: Json | null
+          pharmacy_id?: string
+          status?: string
+          total_distance?: number | null
+          total_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           approved: boolean | null
@@ -56,6 +197,48 @@ export type Database = {
           shift_status?: string | null
           user_id?: string
           vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      pharmacy_settings: {
+        Row: {
+          address: string
+          base_price: number | null
+          created_at: string
+          id: string
+          lat: number
+          lng: number
+          pharmacy_name: string
+          phone: string | null
+          price_per_km: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address: string
+          base_price?: number | null
+          created_at?: string
+          id?: string
+          lat: number
+          lng: number
+          pharmacy_name: string
+          phone?: string | null
+          price_per_km?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          address?: string
+          base_price?: number | null
+          created_at?: string
+          id?: string
+          lat?: number
+          lng?: number
+          pharmacy_name?: string
+          phone?: string | null
+          price_per_km?: number | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

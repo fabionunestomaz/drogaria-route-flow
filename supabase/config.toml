@@ -8,3 +8,6 @@ verify_jwt = true
 
 [functions.geocoding]
 verify_jwt = false
+
+[functions.optimize-route]
+verify_jwt = false
