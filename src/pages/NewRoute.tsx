@@ -20,6 +20,24 @@ const NewRoute = () => {
   const [pharmacySettings, setPharmacySettings] = useState<any>(null);
   const [saving, setSaving] = useState(false);
 
+  // Receber solicitação do cliente via navigation state
+  useEffect(() => {
+    const state = (window.history.state?.usr || {}) as any;
+    if (state.requestId && state.destination) {
+      const newDelivery: Delivery = {
+        id: crypto.randomUUID(),
+        requestId: state.requestId,
+        customerName: 'Cliente',
+        orderNumber: `REQ-${state.requestId.slice(0, 8)}`,
+        address: state.destination.address,
+        lat: state.destination.lat,
+        lng: state.destination.lng,
+        notes: ''
+      };
+      setDeliveries([newDelivery]);
+    }
+  }, []);
+
   useEffect(() => {
     loadPharmacySettings();
   }, [user]);
@@ -108,6 +126,7 @@ const NewRoute = () => {
       return {
         batch_id: batch.id,
         customer_id: delivery.customerId || null,
+        request_id: delivery.requestId || null,
         order_number: delivery.orderNumber,
         address: wp.address,
         lat: wp.lat,
@@ -122,14 +141,27 @@ const NewRoute = () => {
       .from('deliveries')
       .insert(deliveriesData);
 
-    setSaving(false);
-
     if (deliveriesError) {
       toast.error('Erro ao salvar entregas');
-    } else {
-      toast.success('Rota criada com sucesso!');
-      navigate('/');
+      setSaving(false);
+      return;
     }
+
+    // Atualizar status das solicitações para 'assigned'
+    const requestIds = deliveries
+      .filter(d => d.requestId)
+      .map(d => d.requestId);
+
+    if (requestIds.length > 0) {
+      await supabase
+        .from('delivery_requests')
+        .update({ status: 'assigned' })
+        .in('id', requestIds);
+    }
+
+    setSaving(false);
+    toast.success('Rota criada com sucesso!');
+    navigate('/');
   };
 
   return (

@@ -66,6 +66,7 @@ export type Database = {
           notes: string | null
           order_number: string
           proof_photo_url: string | null
+          request_id: string | null
           sequence: number
           status: string
           updated_at: string
@@ -82,6 +83,7 @@ export type Database = {
           notes?: string | null
           order_number: string
           proof_photo_url?: string | null
+          request_id?: string | null
           sequence?: number
           status?: string
           updated_at?: string
@@ -98,6 +100,7 @@ export type Database = {
           notes?: string | null
           order_number?: string
           proof_photo_url?: string | null
+          request_id?: string | null
           sequence?: number
           status?: string
           updated_at?: string
@@ -115,6 +118,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "customers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "deliveries_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_requests"
             referencedColumns: ["id"]
           },
         ]

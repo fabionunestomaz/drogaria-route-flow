@@ -14,6 +14,7 @@ export interface Delivery {
   lat: number;
   lng: number;
   notes?: string;
+  requestId?: string;
 }
 
 interface DeliveryListProps {
