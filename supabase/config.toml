@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.register-driver]
 verify_jwt = true
+
+[functions.geocoding]
+verify_jwt = false

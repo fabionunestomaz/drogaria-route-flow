@@ -15,10 +15,28 @@ import Motoboy from "./pages/Motoboy";
 import Admin from "./pages/Admin";
 import TrackingPublic from "./pages/TrackingPublic";
 import NotFound from "./pages/NotFound";
+import MapboxTokenInput from "./components/MapboxTokenInput";
+import { hasMapboxToken } from "./lib/mapboxConfig";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const hasToken = hasMapboxToken();
+
+  if (!hasToken) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider>
+          <TooltipProvider>
+            <Toaster />
+            <MapboxTokenInput />
+          </TooltipProvider>
+        </ThemeProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  return (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider defaultTheme="dark">
       <TooltipProvider>
@@ -64,5 +82,6 @@ const App = () => (
     </ThemeProvider>
   </QueryClientProvider>
 );
+};
 
 export default App;
