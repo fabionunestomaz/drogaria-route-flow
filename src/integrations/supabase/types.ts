@@ -14,7 +14,194 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      drivers: {
+        Row: {
+          approved: boolean | null
+          cnh_back_url: string | null
+          cnh_front_url: string | null
+          cnh_number: string | null
+          created_at: string
+          id: string
+          last_seen_at: string | null
+          plate: string | null
+          selfie_url: string | null
+          shift_status: string | null
+          user_id: string
+          vehicle_type: string | null
+        }
+        Insert: {
+          approved?: boolean | null
+          cnh_back_url?: string | null
+          cnh_front_url?: string | null
+          cnh_number?: string | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          plate?: string | null
+          selfie_url?: string | null
+          shift_status?: string | null
+          user_id: string
+          vehicle_type?: string | null
+        }
+        Update: {
+          approved?: boolean | null
+          cnh_back_url?: string | null
+          cnh_front_url?: string | null
+          cnh_number?: string | null
+          created_at?: string
+          id?: string
+          last_seen_at?: string | null
+          plate?: string | null
+          selfie_url?: string | null
+          shift_status?: string | null
+          user_id?: string
+          vehicle_type?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          phone: string | null
+          photo_url: string | null
+          role: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          phone?: string | null
+          photo_url?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string | null
+          photo_url?: string | null
+          role?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      ride_locations: {
+        Row: {
+          accuracy: number | null
+          driver_id: string | null
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          ride_id: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          driver_id?: string | null
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          ride_id: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          driver_id?: string | null
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          ride_id?: string
+          speed?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_locations_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rides: {
+        Row: {
+          cancelable_until: string | null
+          coupon_code: string | null
+          created_at: string
+          customer_id: string | null
+          dest_address: string
+          dest_lat: number | null
+          dest_lng: number | null
+          driver_id: string | null
+          id: string
+          origin_address: string
+          origin_lat: number | null
+          origin_lng: number | null
+          price_final: number | null
+          price_mode: string | null
+          status: string
+          tracking_enabled: boolean
+          tracking_expires_at: string | null
+          tracking_token: string
+          updated_at: string
+        }
+        Insert: {
+          cancelable_until?: string | null
+          coupon_code?: string | null
+          created_at?: string
+          customer_id?: string | null
+          dest_address: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          driver_id?: string | null
+          id?: string
+          origin_address: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          price_final?: number | null
+          price_mode?: string | null
+          status?: string
+          tracking_enabled?: boolean
+          tracking_expires_at?: string | null
+          tracking_token?: string
+          updated_at?: string
+        }
+        Update: {
+          cancelable_until?: string | null
+          coupon_code?: string | null
+          created_at?: string
+          customer_id?: string | null
+          dest_address?: string
+          dest_lat?: number | null
+          dest_lng?: number | null
+          driver_id?: string | null
+          id?: string
+          origin_address?: string
+          origin_lat?: number | null
+          origin_lng?: number | null
+          price_final?: number | null
+          price_mode?: string | null
+          status?: string
+          tracking_enabled?: boolean
+          tracking_expires_at?: string | null
+          tracking_token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
