@@ -1,320 +1,458 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Package,
-  TrendingUp,
   Clock,
   CheckCircle,
-  XCircle,
   Users,
   MapPin,
   BarChart3,
+  Trash2,
+  RefreshCw,
+  UserPlus,
+  Loader2,
+  AlertCircle,
 } from "lucide-react";
+import { useAdminData } from "@/hooks/useAdminData";
+import { useDrivers } from "@/hooks/useDrivers";
+import RouteMap from "@/components/RouteMap";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
-  const kpis = [
+  const { batches, kpis, loading, deleteBatch, updateBatchStatus, reassignDriver } = useAdminData();
+  const { drivers } = useDrivers();
+  const navigate = useNavigate();
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+
+  const handleDeleteClick = (batchId: string) => {
+    setSelectedBatchId(batchId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (selectedBatchId) {
+      await deleteBatch(selectedBatchId);
+      setDeleteDialogOpen(false);
+      setSelectedBatchId(null);
+    }
+  };
+
+  const getStatusBadge = (status: string) => {
+    const statusMap: Record<string, { label: string; className: string }> = {
+      pending: { label: "Pendente", className: "bg-yellow-500 text-white" },
+      in_progress: { label: "Em Progresso", className: "bg-blue-500 text-white" },
+      completed: { label: "Concluído", className: "bg-green-500 text-white" },
+      cancelled: { label: "Cancelado", className: "bg-red-500 text-white" },
+    };
+    return statusMap[status] || statusMap.pending;
+  };
+
+  const activeBatches = batches.filter(b => b.status === 'in_progress');
+  const pendingBatches = batches.filter(b => b.status === 'pending');
+  const completedBatches = batches.filter(b => b.status === 'completed');
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  const kpiData = [
     {
       label: "Entregas Hoje",
-      value: "47",
-      change: "+12%",
+      value: kpis.deliveriesToday.toString(),
       icon: Package,
       color: "text-primary",
     },
     {
       label: "Taxa de Sucesso",
-      value: "94%",
-      change: "+3%",
+      value: `${kpis.successRate}%`,
       icon: CheckCircle,
-      color: "text-success",
+      color: "text-green-500",
     },
     {
       label: "Motoboys Ativos",
-      value: "8",
-      change: "0",
+      value: kpis.activeDrivers.toString(),
       icon: Users,
-      color: "text-warning",
+      color: "text-blue-500",
     },
     {
       label: "Tempo Médio",
-      value: "28min",
-      change: "-5%",
+      value: `${kpis.averageTime}min`,
       icon: Clock,
-      color: "text-accent",
-    },
-  ];
-
-  const activeRoutes = [
-    {
-      id: 1,
-      driver: "João Silva",
-      stops: 8,
-      completed: 3,
-      onTime: true,
-      currentLocation: "Av. Principal, 123",
-      eta: "2.5h",
-    },
-    {
-      id: 2,
-      driver: "Maria Santos",
-      stops: 12,
-      completed: 7,
-      onTime: true,
-      currentLocation: "Rua das Flores, 456",
-      eta: "3.2h",
-    },
-    {
-      id: 3,
-      driver: "Pedro Costa",
-      stops: 6,
-      completed: 2,
-      onTime: false,
-      currentLocation: "Praça Central, 789",
-      eta: "1.8h",
-    },
-  ];
-
-  const recentDeliveries = [
-    {
-      id: 1,
-      customer: "Ana Paula",
-      address: "Rua A, 100",
-      driver: "João Silva",
-      status: "delivered",
-      time: "10:45",
-    },
-    {
-      id: 2,
-      customer: "Carlos Souza",
-      address: "Av. B, 200",
-      driver: "Maria Santos",
-      status: "delivered",
-      time: "10:30",
-    },
-    {
-      id: 3,
-      customer: "Beatriz Lima",
-      address: "Rua C, 300",
-      driver: "Pedro Costa",
-      status: "enroute",
-      time: "10:15",
+      color: "text-orange-500",
     },
   ];
 
   return (
-    <div className="min-h-screen py-8">
-      <div className="container px-4 max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl sm:text-4xl font-bold mb-2">
-            Dashboard Administrativo
-          </h1>
-          <p className="text-muted-foreground">
-            Monitore operações, planeje rotas e analise indicadores em tempo real
-          </p>
-        </div>
-
-        {/* KPIs Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-          {kpis.map((kpi, index) => (
-            <Card key={index} className="p-6 hover:shadow-elevated transition-smooth">
-              <div className="flex items-start justify-between mb-2">
-                <kpi.icon className={`h-8 w-8 ${kpi.color}`} />
-                <Badge
-                  variant="outline"
-                  className={
-                    kpi.change.startsWith("+")
-                      ? "text-success border-success"
-                      : kpi.change === "0"
-                      ? "text-muted-foreground"
-                      : "text-destructive border-destructive"
-                  }
-                >
-                  {kpi.change}
-                </Badge>
-              </div>
-              <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
-              <p className="text-3xl font-bold">{kpi.value}</p>
-            </Card>
-          ))}
-        </div>
-
-        <Tabs defaultValue="monitor" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="monitor" className="touch-target">
-              <MapPin className="h-4 w-4 mr-2" />
-              Monitor
-            </TabsTrigger>
-            <TabsTrigger value="planner" className="touch-target">
-              <Package className="h-4 w-4 mr-2" />
-              Planner
-            </TabsTrigger>
-            <TabsTrigger value="reports" className="touch-target">
-              <BarChart3 className="h-4 w-4 mr-2" />
-              Relatórios
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="monitor" className="space-y-6">
-            {/* Map Placeholder */}
-            <Card className="p-4">
-              <div className="bg-muted/50 rounded-lg h-[400px] flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium mb-2">Mapa em Tempo Real</p>
-                  <p className="text-sm text-muted-foreground max-w-md">
-                    Visualização com Mapbox mostrando rotas ativas, posição dos
-                    motoboys e status de entregas
-                  </p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Active Routes */}
+    <>
+      <div className="min-h-screen py-8">
+        <div className="container px-4 max-w-7xl mx-auto">
+          <div className="mb-8 flex items-center justify-between">
             <div>
-              <h2 className="text-2xl font-bold mb-4">Rotas Ativas</h2>
-              <div className="space-y-4">
-                {activeRoutes.map((route) => (
-                  <Card key={route.id} className="p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="font-semibold">{route.driver}</h3>
-                          <Badge
-                            className={
-                              route.onTime
-                                ? "bg-success text-white"
-                                : "bg-destructive text-white"
-                            }
-                          >
-                            {route.onTime ? "No Prazo" : "Atrasada"}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {route.completed}/{route.stops} paradas concluídas
-                        </p>
-                        <p className="text-sm mb-1">
-                          <MapPin className="inline h-4 w-4 mr-1" />
-                          {route.currentLocation}
-                        </p>
-                        <p className="text-sm text-muted-foreground">
-                          ETA conclusão: {route.eta}
-                        </p>
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Button variant="outline" size="sm" className="touch-target">
-                          Ver Rota
-                        </Button>
-                        <Button variant="ghost" size="sm" className="touch-target">
-                          Reatribuir
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                ))}
-              </div>
+              <h1 className="text-3xl sm:text-4xl font-bold mb-2">
+                Dashboard Administrativo
+              </h1>
+              <p className="text-muted-foreground">
+                Monitore operações, planeje rotas e analise indicadores em tempo real
+              </p>
             </div>
-          </TabsContent>
+            <Button onClick={() => navigate('/new-route')} size="lg">
+              <Package className="mr-2 h-5 w-5" />
+              Nova Rota
+            </Button>
+          </div>
 
-          <TabsContent value="planner" className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Planejador de Rotas</h2>
-              <div className="space-y-4">
-                <div className="bg-muted/50 rounded-lg p-8 text-center">
-                  <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <p className="text-lg font-medium mb-2">
-                    Otimização Automática de Rotas
-                  </p>
-                  <p className="text-sm text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    Selecione pedidos pendentes, defina o depósito e deixe o
-                    algoritmo criar rotas otimizadas usando Mapbox Optimization API
-                  </p>
-                  <Button size="lg" className="touch-target shadow-glow">
+          {/* KPIs Grid */}
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            {kpiData.map((kpi, index) => (
+              <Card key={index} className="p-6 hover:shadow-lg transition-all">
+                <div className="flex items-start justify-between mb-2">
+                  <kpi.icon className={`h-8 w-8 ${kpi.color}`} />
+                </div>
+                <p className="text-sm text-muted-foreground mb-1">{kpi.label}</p>
+                <p className="text-3xl font-bold">{kpi.value}</p>
+              </Card>
+            ))}
+          </div>
+
+          <Tabs defaultValue="monitor" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="monitor">
+                <MapPin className="h-4 w-4 mr-2" />
+                Monitor
+              </TabsTrigger>
+              <TabsTrigger value="planner">
+                <Package className="h-4 w-4 mr-2" />
+                Pendentes
+              </TabsTrigger>
+              <TabsTrigger value="reports">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Concluídos
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="monitor" className="space-y-6">
+              {/* Map */}
+              {activeBatches.length > 0 ? (
+                <Card className="p-4">
+                  <div className="h-[400px] rounded-lg overflow-hidden">
+                    <RouteMap
+                      destinations={activeBatches.flatMap(batch => 
+                        batch.deliveries.map(d => ({
+                          lat: d.lat,
+                          lng: d.lng,
+                          label: d.customers.name,
+                          sequence: d.sequence
+                        }))
+                      )}
+                    />
+                  </div>
+                </Card>
+              ) : (
+                <Card className="p-4">
+                  <div className="bg-muted/50 rounded-lg h-[400px] flex items-center justify-center">
+                    <div className="text-center">
+                      <AlertCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-lg font-medium mb-2">Nenhuma rota ativa</p>
+                      <p className="text-sm text-muted-foreground max-w-md">
+                        Crie uma nova rota ou atribua um motorista aos lotes pendentes
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              )}
+
+              {/* Active Routes */}
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Rotas Ativas ({activeBatches.length})</h2>
+                {activeBatches.length === 0 ? (
+                  <Card className="p-6">
+                    <p className="text-center text-muted-foreground">Nenhuma rota ativa no momento</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {activeBatches.map((batch) => {
+                      const completed = batch.deliveries.filter(d => d.status === 'delivered').length;
+                      const total = batch.deliveries.length;
+                      const statusBadge = getStatusBadge(batch.status);
+
+                      return (
+                        <Card key={batch.id} className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold">
+                                  {batch.driver?.profiles?.name || 'Sem motorista'}
+                                </h3>
+                                <Badge className={statusBadge.className}>
+                                  {statusBadge.label}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {completed}/{total} paradas concluídas
+                              </p>
+                              {batch.total_distance && (
+                                <p className="text-sm text-muted-foreground">
+                                  Distância: {(batch.total_distance / 1000).toFixed(1)} km
+                                </p>
+                              )}
+                              {batch.total_price && (
+                                <p className="text-sm text-muted-foreground">
+                                  Valor: R$ {batch.total_price.toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/route-details/${batch.id}`)}
+                              >
+                                Ver Rota
+                              </Button>
+                              <Select onValueChange={(value) => reassignDriver(batch.id, value || null)}>
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Reatribuir" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {drivers.map(driver => (
+                                    <SelectItem key={driver.id} value={driver.user_id}>
+                                      {driver.profiles.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => updateBatchStatus(batch.id, 'completed')}
+                              >
+                                <CheckCircle className="h-4 w-4 mr-1" />
+                                Concluir
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteClick(batch.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="planner" className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold">Lotes Pendentes ({pendingBatches.length})</h2>
+                  <Button onClick={() => navigate('/new-route')}>
+                    <Package className="mr-2 h-4 w-4" />
                     Criar Nova Rota
                   </Button>
                 </div>
-              </div>
-            </Card>
 
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Pedidos Pendentes</h3>
-              <div className="space-y-2">
-                {recentDeliveries
-                  .filter((d) => d.status !== "delivered")
-                  .map((delivery) => (
-                    <div
-                      key={delivery.id}
-                      className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                    >
-                      <div>
-                        <p className="font-medium">{delivery.customer}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {delivery.address}
-                        </p>
-                      </div>
-                      <Button variant="outline" size="sm" className="touch-target">
-                        Adicionar
+                {pendingBatches.length === 0 ? (
+                  <Card className="p-6">
+                    <div className="text-center">
+                      <Package className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-lg font-medium mb-2">Nenhum lote pendente</p>
+                      <p className="text-sm text-muted-foreground mb-6">
+                        Crie uma nova rota para começar a planejar entregas
+                      </p>
+                      <Button onClick={() => navigate('/new-route')}>
+                        Criar Primeira Rota
                       </Button>
                     </div>
-                  ))}
-              </div>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="reports" className="space-y-6">
-            <Card className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Relatórios e KPIs</h2>
-              <div className="bg-muted/50 rounded-lg p-8 text-center">
-                <BarChart3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium mb-2">Análise Detalhada</p>
-                <p className="text-sm text-muted-foreground mb-6 max-w-2xl mx-auto">
-                  Gráficos de desempenho, ranking de motoboys, análise de
-                  eficiência por período e exportação de dados em CSV
-                </p>
-                <div className="flex gap-4 justify-center">
-                  <Button variant="outline" className="touch-target">
-                    Relatório Diário
-                  </Button>
-                  <Button variant="outline" className="touch-target">
-                    Relatório Mensal
-                  </Button>
-                  <Button className="touch-target">Exportar CSV</Button>
-                </div>
-              </div>
-            </Card>
-
-            <Card className="p-6">
-              <h3 className="text-xl font-bold mb-4">Entregas Recentes</h3>
-              <div className="space-y-2">
-                {recentDeliveries.map((delivery) => (
-                  <div
-                    key={delivery.id}
-                    className="flex items-center justify-between p-3 bg-muted/30 rounded-lg"
-                  >
-                    <div className="flex items-center gap-3">
-                      {delivery.status === "delivered" ? (
-                        <CheckCircle className="h-5 w-5 text-success" />
-                      ) : (
-                        <Clock className="h-5 w-5 text-warning" />
-                      )}
-                      <div>
-                        <p className="font-medium">{delivery.customer}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {delivery.address} • {delivery.driver}
-                        </p>
-                      </div>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {delivery.time}
-                    </span>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {pendingBatches.map((batch) => {
+                      const statusBadge = getStatusBadge(batch.status);
+                      return (
+                        <Card key={batch.id} className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <Badge className={statusBadge.className}>
+                                  {statusBadge.label}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {batch.deliveries.length} entregas
+                              </p>
+                              {batch.total_distance && (
+                                <p className="text-sm text-muted-foreground">
+                                  Distância: {(batch.total_distance / 1000).toFixed(1)} km
+                                </p>
+                              )}
+                              {batch.total_price && (
+                                <p className="text-sm text-muted-foreground">
+                                  Valor: R$ {batch.total_price.toFixed(2)}
+                                </p>
+                              )}
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Select onValueChange={(value) => {
+                                reassignDriver(batch.id, value);
+                                updateBatchStatus(batch.id, 'in_progress');
+                              }}>
+                                <SelectTrigger className="w-[180px]">
+                                  <SelectValue placeholder="Atribuir motorista" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {drivers.filter(d => d.shift_status === 'online').map(driver => (
+                                    <SelectItem key={driver.id} value={driver.user_id}>
+                                      {driver.profiles.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/route-details/${batch.id}`)}
+                              >
+                                Ver Detalhes
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteClick(batch.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
                   </div>
-                ))}
+                )}
               </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+
+            <TabsContent value="reports" className="space-y-6">
+              <div>
+                <h2 className="text-2xl font-bold mb-4">Lotes Concluídos ({completedBatches.length})</h2>
+                
+                {completedBatches.length === 0 ? (
+                  <Card className="p-6">
+                    <p className="text-center text-muted-foreground">Nenhum lote concluído ainda</p>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {completedBatches.map((batch) => {
+                      const completed = batch.deliveries.filter(d => d.status === 'delivered').length;
+                      const total = batch.deliveries.length;
+                      const statusBadge = getStatusBadge(batch.status);
+
+                      return (
+                        <Card key={batch.id} className="p-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                <h3 className="font-semibold">
+                                  {batch.driver?.profiles?.name || 'Sem motorista'}
+                                </h3>
+                                <Badge className={statusBadge.className}>
+                                  {statusBadge.label}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground mb-1">
+                                {completed}/{total} entregas realizadas
+                              </p>
+                              {batch.total_distance && (
+                                <p className="text-sm text-muted-foreground">
+                                  Distância: {(batch.total_distance / 1000).toFixed(1)} km
+                                </p>
+                              )}
+                              {batch.total_price && (
+                                <p className="text-sm text-muted-foreground">
+                                  Valor: R$ {batch.total_price.toFixed(2)}
+                                </p>
+                              )}
+                              <p className="text-sm text-muted-foreground">
+                                Concluído em: {new Date(batch.created_at).toLocaleDateString('pt-BR')}
+                              </p>
+                            </div>
+                            <div className="flex flex-col gap-2">
+                              <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => navigate(`/route-details/${batch.id}`)}
+                              >
+                                Ver Detalhes
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDeleteClick(batch.id)}
+                              >
+                                <Trash2 className="h-4 w-4 mr-1" />
+                                Excluir
+                              </Button>
+                            </div>
+                          </div>
+                        </Card>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
       </div>
-    </div>
+
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir este lote? Esta ação não pode ser desfeita e todas as entregas associadas também serão removidas.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
   );
 };
 
