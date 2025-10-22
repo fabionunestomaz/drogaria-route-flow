@@ -1,7 +1,7 @@
 import { Moon, Sun, Menu, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -19,7 +19,13 @@ import {
 const Header = () => {
   const { theme, setTheme } = useTheme();
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/');
+  };
 
   const navLinks = [
     { href: "/", label: "Início" },
@@ -80,7 +86,7 @@ const Header = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={signOut}>Sair</DropdownMenuItem>
+                <DropdownMenuItem onClick={handleSignOut}>Sair</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (

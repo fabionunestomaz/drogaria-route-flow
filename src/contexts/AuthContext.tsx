@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { useNavigate } from 'react-router-dom';
 
 interface UserRoles {
   isAdmin: boolean;
@@ -27,7 +26,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [roles, setRoles] = useState<UserRoles>({ isAdmin: false, isDriver: false, isCustomer: false });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   const loadUserRoles = async (userId: string) => {
     const { data, error } = await supabase
@@ -99,7 +97,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = async () => {
     await supabase.auth.signOut();
-    navigate('/');
   };
 
   const refreshRoles = async () => {
