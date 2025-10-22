@@ -160,16 +160,16 @@ const Admin = () => {
               {activeBatches.length > 0 ? (
                 <Card className="p-4">
                   <div className="h-[400px] rounded-lg overflow-hidden">
-                    <RouteMap
-                      destinations={activeBatches.flatMap(batch => 
-                        batch.deliveries.map(d => ({
-                          lat: d.lat,
-                          lng: d.lng,
-                          label: d.customers.name,
-                          sequence: d.sequence
-                        }))
-                      )}
-                    />
+                     <RouteMap
+                       destinations={activeBatches.flatMap(batch => 
+                         batch.deliveries.map(d => ({
+                           lat: d.lat,
+                           lng: d.lng,
+                           label: d.customers?.name || d.address,
+                           sequence: d.sequence
+                         }))
+                       )}
+                     />
                   </div>
                 </Card>
               ) : (
@@ -195,7 +195,7 @@ const Admin = () => {
                   </Card>
                 ) : (
                   <div className="space-y-4">
-                    {activeBatches.map((batch) => {
+                     {activeBatches.map((batch) => {
                       const completed = batch.deliveries.filter(d => d.status === 'delivered').length;
                       const total = batch.deliveries.length;
                       const statusBadge = getStatusBadge(batch.status);
@@ -206,7 +206,7 @@ const Admin = () => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold">
-                                  {batch.driver?.profiles?.name || 'Sem motorista'}
+                                  {batch.driver?.profiles?.[0]?.name || 'Sem motorista'}
                                 </h3>
                                 <Badge className={statusBadge.className}>
                                   {statusBadge.label}
@@ -238,13 +238,13 @@ const Admin = () => {
                                 <SelectTrigger className="w-[180px]">
                                   <SelectValue placeholder="Reatribuir" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {drivers.map(driver => (
-                                    <SelectItem key={driver.id} value={driver.user_id}>
-                                      {driver.profiles.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
+                                 <SelectContent>
+                                   {drivers.map(driver => (
+                                     <SelectItem key={driver.id} value={driver.user_id}>
+                                       {driver.profiles?.[0]?.name || 'Motorista'}
+                                     </SelectItem>
+                                   ))}
+                                 </SelectContent>
                               </Select>
                               <Button
                                 variant="ghost"
@@ -330,13 +330,13 @@ const Admin = () => {
                                 <SelectTrigger className="w-[180px]">
                                   <SelectValue placeholder="Atribuir motorista" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                  {drivers.filter(d => d.shift_status === 'online').map(driver => (
-                                    <SelectItem key={driver.id} value={driver.user_id}>
-                                      {driver.profiles.name}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
+                                 <SelectContent>
+                                   {drivers.filter(d => d.shift_status === 'online').map(driver => (
+                                     <SelectItem key={driver.id} value={driver.user_id}>
+                                       {driver.profiles?.[0]?.name || 'Motorista'}
+                                     </SelectItem>
+                                   ))}
+                                 </SelectContent>
                               </Select>
                               <Button 
                                 variant="outline" 
@@ -384,7 +384,7 @@ const Admin = () => {
                             <div className="flex-1">
                               <div className="flex items-center gap-2 mb-2">
                                 <h3 className="font-semibold">
-                                  {batch.driver?.profiles?.name || 'Sem motorista'}
+                                  {batch.driver?.profiles?.[0]?.name || 'Sem motorista'}
                                 </h3>
                                 <Badge className={statusBadge.className}>
                                   {statusBadge.label}

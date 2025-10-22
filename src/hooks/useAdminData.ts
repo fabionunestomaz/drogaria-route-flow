@@ -24,11 +24,11 @@ export interface DeliveryBatchWithDetails {
     lat: number;
     lng: number;
     sequence: number;
-    customer_id: string;
+    customer_id: string | null;
     customers: {
       name: string;
       phone: string;
-    };
+    } | null;
   }>;
 }
 
@@ -55,9 +55,9 @@ export const useAdminData = () => {
         .from('delivery_batches')
         .select(`
           *,
-          driver:drivers!delivery_batches_driver_id_fkey(
+          driver:drivers(
             user_id,
-            profiles!drivers_user_id_fkey(name)
+            profiles(name)
           ),
           deliveries(
             *,

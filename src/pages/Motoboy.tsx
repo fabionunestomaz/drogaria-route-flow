@@ -172,7 +172,7 @@ const Motoboy = () => {
                   destinations={activeDeliveries.map((d) => ({
                     lat: d.lat,
                     lng: d.lng,
-                    label: d.customer.name,
+                    label: d.customer?.name || d.address,
                     sequence: d.sequence
                   }))}
                   route={activeBatch.optimized_route?.coordinates}
@@ -200,8 +200,8 @@ const Motoboy = () => {
                           {getStatusText(delivery.status)}
                         </Badge>
                       </div>
-                      <p className="font-medium mb-1">{delivery.customer.name}</p>
-                      <p className="text-sm text-muted-foreground mb-1">{delivery.customer.phone}</p>
+                      <p className="font-medium mb-1">{delivery.customer?.name || 'Cliente'}</p>
+                      <p className="text-sm text-muted-foreground mb-1">{delivery.customer?.phone || 'Sem telefone'}</p>
                       <p className="text-sm mb-1">{delivery.address}</p>
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <Package className="h-4 w-4" />

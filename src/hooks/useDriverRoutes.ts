@@ -13,7 +13,7 @@ export interface DriverDelivery {
   customer: {
     name: string;
     phone: string;
-  };
+  } | null;
 }
 
 export interface DriverBatch {

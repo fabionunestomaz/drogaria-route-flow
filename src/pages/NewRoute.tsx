@@ -107,7 +107,7 @@ const NewRoute = () => {
       const delivery = deliveries.find(d => d.id === wp.id)!;
       return {
         batch_id: batch.id,
-        customer_id: delivery.customerId,
+        customer_id: delivery.customerId || null,
         order_number: delivery.orderNumber,
         address: wp.address,
         lat: wp.lat,

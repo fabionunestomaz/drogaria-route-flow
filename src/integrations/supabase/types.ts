@@ -58,7 +58,7 @@ export type Database = {
           address: string
           batch_id: string
           created_at: string
-          customer_id: string
+          customer_id: string | null
           delivered_at: string | null
           id: string
           lat: number
@@ -74,7 +74,7 @@ export type Database = {
           address: string
           batch_id: string
           created_at?: string
-          customer_id: string
+          customer_id?: string | null
           delivered_at?: string | null
           id?: string
           lat: number
@@ -90,7 +90,7 @@ export type Database = {
           address?: string
           batch_id?: string
           created_at?: string
-          customer_id?: string
+          customer_id?: string | null
           delivered_at?: string | null
           id?: string
           lat?: number
