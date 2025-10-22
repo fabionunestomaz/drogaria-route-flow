@@ -163,6 +163,63 @@ export type Database = {
           },
         ]
       }
+      delivery_requests: {
+        Row: {
+          created_at: string | null
+          customer_id: string | null
+          dest_address: string
+          dest_lat: number
+          dest_lng: number
+          distance: number | null
+          estimated_price: number | null
+          estimated_time: number | null
+          id: string
+          notes: string | null
+          origin_address: string
+          origin_lat: number
+          origin_lng: number
+          status: string | null
+          tracking_token: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          customer_id?: string | null
+          dest_address: string
+          dest_lat: number
+          dest_lng: number
+          distance?: number | null
+          estimated_price?: number | null
+          estimated_time?: number | null
+          id?: string
+          notes?: string | null
+          origin_address: string
+          origin_lat: number
+          origin_lng: number
+          status?: string | null
+          tracking_token?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          customer_id?: string | null
+          dest_address?: string
+          dest_lat?: number
+          dest_lng?: number
+          distance?: number | null
+          estimated_price?: number | null
+          estimated_time?: number | null
+          id?: string
+          notes?: string | null
+          origin_address?: string
+          origin_lat?: number
+          origin_lng?: number
+          status?: string | null
+          tracking_token?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       drivers: {
         Row: {
           approved: boolean | null

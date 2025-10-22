@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useAdminData } from "@/hooks/useAdminData";
 import { useDrivers } from "@/hooks/useDrivers";
+import { useAdminDeliveryRequests } from "@/hooks/useAdminDeliveryRequests";
 import RouteMap from "@/components/RouteMap";
 import {
   AlertDialog,
@@ -40,10 +41,13 @@ import { useNavigate } from "react-router-dom";
 
 const Admin = () => {
   const { batches, kpis, loading, deleteBatch, updateBatchStatus, reassignDriver } = useAdminData();
+  const { requests: deliveryRequests, loading: loadingRequests, deleteRequest } = useAdminDeliveryRequests();
   const { drivers } = useDrivers();
   const navigate = useNavigate();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedBatchId, setSelectedBatchId] = useState<string | null>(null);
+  const [deleteRequestDialogOpen, setDeleteRequestDialogOpen] = useState(false);
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
 
   const handleDeleteClick = (batchId: string) => {
     setSelectedBatchId(batchId);
@@ -55,6 +59,14 @@ const Admin = () => {
       await deleteBatch(selectedBatchId);
       setDeleteDialogOpen(false);
       setSelectedBatchId(null);
+    }
+  };
+
+  const handleDeleteRequestConfirm = async () => {
+    if (selectedRequestId) {
+      await deleteRequest(selectedRequestId);
+      setDeleteRequestDialogOpen(false);
+      setSelectedRequestId(null);
     }
   };
 
@@ -140,10 +152,14 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="monitor" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="monitor">
                 <MapPin className="h-4 w-4 mr-2" />
                 Monitor
+              </TabsTrigger>
+              <TabsTrigger value="requests">
+                <AlertCircle className="h-4 w-4 mr-2" />
+                Solicitações
               </TabsTrigger>
               <TabsTrigger value="planner">
                 <Package className="h-4 w-4 mr-2" />
@@ -267,6 +283,93 @@ const Admin = () => {
                         </Card>
                       );
                     })}
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="requests" className="space-y-6">
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold">Solicitações de Clientes ({deliveryRequests.length})</h2>
+                </div>
+
+                {loadingRequests ? (
+                  <Card className="p-6">
+                    <div className="flex items-center justify-center py-8">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    </div>
+                  </Card>
+                ) : deliveryRequests.length === 0 ? (
+                  <Card className="p-6">
+                    <div className="text-center">
+                      <AlertCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+                      <p className="text-lg font-medium mb-2">Nenhuma solicitação pendente</p>
+                      <p className="text-sm text-muted-foreground">
+                        As solicitações de entrega dos clientes aparecerão aqui
+                      </p>
+                    </div>
+                  </Card>
+                ) : (
+                  <div className="space-y-4">
+                    {deliveryRequests.map((request) => (
+                      <Card key={request.id} className="p-4">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Package className="h-5 w-5 text-primary" />
+                              <Badge className="bg-yellow-500 text-white">
+                                Aguardando
+                              </Badge>
+                            </div>
+                            <div className="space-y-1 text-sm">
+                              <p className="font-medium">Origem: {request.origin_address}</p>
+                              <p className="font-medium">Destino: {request.dest_address}</p>
+                              <p className="text-muted-foreground">
+                                {request.distance ? `${request.distance.toFixed(1)} km` : '--'} • {request.estimated_time ? `${request.estimated_time} min` : '--'}
+                              </p>
+                              {request.estimated_price && (
+                                <p className="text-lg font-bold text-primary">
+                                  R$ {request.estimated_price.toFixed(2)}
+                                </p>
+                              )}
+                              <p className="text-xs text-muted-foreground">
+                                Solicitado em: {new Date(request.created_at).toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col gap-2">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                // TODO: Implementar criação de lote a partir da solicitação
+                                navigate('/new-route', { 
+                                  state: { 
+                                    requestId: request.id,
+                                    origin: { lat: request.origin_lat, lng: request.origin_lng, address: request.origin_address },
+                                    destination: { lat: request.dest_lat, lng: request.dest_lng, address: request.dest_address }
+                                  }
+                                });
+                              }}
+                            >
+                              Criar Lote
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedRequestId(request.id);
+                                setDeleteRequestDialogOpen(true);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Excluir
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                    ))}
                   </div>
                 )}
               </div>
@@ -447,6 +550,23 @@ const Admin = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Excluir
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={deleteRequestDialogOpen} onOpenChange={setDeleteRequestDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar exclusão</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja excluir esta solicitação de entrega? Esta ação não pode ser desfeita.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteRequestConfirm} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Excluir
             </AlertDialogAction>
           </AlertDialogFooter>

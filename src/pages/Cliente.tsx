@@ -4,25 +4,29 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Search, Navigation } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Search, Navigation, Package, XCircle, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import ShareTrackingButton from "@/components/ShareTrackingButton";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import MapPicker from "@/components/MapPicker";
 import { searchCep, formatAddress } from "@/lib/viaCep";
 import { calculateDistance, geocodeAddress } from "@/lib/mapbox";
+import { useDeliveryRequests } from "@/hooks/useDeliveryRequests";
 
 const Cliente = () => {
+  const { requests, loading: loadingRequests, createRequest, cancelRequest } = useDeliveryRequests();
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const [trackingToken, setTrackingToken] = useState<string | null>(null);
+  const [lastTrackingToken, setLastTrackingToken] = useState<string | null>(null);
   const [cepOrigin, setCepOrigin] = useState("");
   const [cepDest, setCepDest] = useState("");
   const [distance, setDistance] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const calculateRoute = () => {
     if (originCoords && destCoords) {
@@ -57,12 +61,44 @@ const Cliente = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate creating a ride with tracking token
-    const mockToken = crypto.randomUUID();
-    setTrackingToken(mockToken);
-    toast.success("Pedido criado com sucesso! Compartilhe o link de rastreamento.");
+    
+    if (!originCoords || !destCoords || !distance || !estimatedTime || !price) {
+      toast.error("Preencha todos os dados da entrega");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      const request = await createRequest({
+        origin_address: origin,
+        origin_lat: originCoords.lat,
+        origin_lng: originCoords.lng,
+        dest_address: destination,
+        dest_lat: destCoords.lat,
+        dest_lng: destCoords.lng,
+        distance,
+        estimated_time: estimatedTime,
+        estimated_price: price,
+      });
+
+      if (request) {
+        setLastTrackingToken(request.tracking_token);
+        // Reset form
+        setOrigin("");
+        setDestination("");
+        setOriginCoords(null);
+        setDestCoords(null);
+        setDistance(null);
+        setEstimatedTime(null);
+        setPrice(null);
+        setCepOrigin("");
+        setCepDest("");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -240,11 +276,23 @@ const Cliente = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <Button type="submit" className="flex-1 touch-target shadow-glow" size="lg">
-                    Solicitar Entrega
+                  <Button 
+                    type="submit" 
+                    className="flex-1 touch-target shadow-glow" 
+                    size="lg"
+                    disabled={!originCoords || !destCoords || isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Enviando...
+                      </>
+                    ) : (
+                      'Solicitar Entrega'
+                    )}
                   </Button>
-                  {trackingToken && (
-                    <ShareTrackingButton trackingToken={trackingToken} />
+                  {lastTrackingToken && (
+                    <ShareTrackingButton trackingToken={lastTrackingToken} />
                   )}
                 </div>
               </div>
@@ -254,11 +302,74 @@ const Cliente = () => {
 
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Minhas Entregas</h2>
-          <Card className="p-6">
-            <p className="text-center text-muted-foreground py-8">
-              Nenhuma entrega ainda. Crie sua primeira entrega acima!
-            </p>
-          </Card>
+          {loadingRequests ? (
+            <Card className="p-6">
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            </Card>
+          ) : requests.length === 0 ? (
+            <Card className="p-6">
+              <p className="text-center text-muted-foreground py-8">
+                Nenhuma entrega ainda. Crie sua primeira entrega acima!
+              </p>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {requests.map((request) => {
+                const statusMap: Record<string, { label: string; className: string }> = {
+                  pending: { label: "Pendente", className: "bg-yellow-500 text-white" },
+                  assigned: { label: "Atribuído", className: "bg-blue-500 text-white" },
+                  completed: { label: "Concluído", className: "bg-green-500 text-white" },
+                  cancelled: { label: "Cancelado", className: "bg-red-500 text-white" },
+                };
+                const status = statusMap[request.status] || statusMap.pending;
+
+                return (
+                  <Card key={request.id} className="p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Package className="h-5 w-5 text-primary" />
+                          <Badge className={status.className}>
+                            {status.label}
+                          </Badge>
+                        </div>
+                        <div className="space-y-1 text-sm">
+                          <p className="font-medium">Origem: {request.origin_address}</p>
+                          <p className="font-medium">Destino: {request.dest_address}</p>
+                          <p className="text-muted-foreground">
+                            {request.distance ? `${request.distance.toFixed(1)} km` : '--'} • {request.estimated_time ? `${request.estimated_time} min` : '--'}
+                          </p>
+                          {request.estimated_price && (
+                            <p className="text-lg font-bold text-primary">
+                              R$ {request.estimated_price.toFixed(2)}
+                            </p>
+                          )}
+                          <p className="text-xs text-muted-foreground">
+                            Criado em: {new Date(request.created_at).toLocaleString('pt-BR')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-2">
+                        <ShareTrackingButton trackingToken={request.tracking_token} />
+                        {request.status === 'pending' && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => cancelRequest(request.id)}
+                          >
+                            <XCircle className="h-4 w-4 mr-1" />
+                            Cancelar
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
         </div>
       </div>
     </div>
