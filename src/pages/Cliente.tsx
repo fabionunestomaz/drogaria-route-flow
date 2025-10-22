@@ -182,7 +182,7 @@ const Cliente = () => {
                     label="Clique no mapa para selecionar a origem"
                     onSelect={(address, coords) => {
                       setOrigin(address);
-                      setOriginCoords({ lat: coords.lat, lng: coords.lng });
+                      setOriginCoords({ lat: coords[1], lng: coords[0] });
                       toast.success("Origem selecionada!");
                     }}
                   />
@@ -192,7 +192,7 @@ const Cliente = () => {
                     initialCenter={[originCoords.lng, originCoords.lat]}
                     onSelect={(address, coords) => {
                       setDestination(address);
-                      setDestCoords({ lat: coords.lat, lng: coords.lng });
+                      setDestCoords({ lat: coords[1], lng: coords[0] });
                       calculateRoute();
                       toast.success("Destino selecionado!");
                     }}
