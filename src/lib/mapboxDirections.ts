@@ -20,7 +20,7 @@ export const calculateRoute = async (
 ): Promise<DirectionsResponse | null> => {
   try {
     const coordinates = `${originLng},${originLat};${destLng},${destLat}`;
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=false&overview=full&geometries=geojson&access_token=${MAPBOX_PUBLIC_TOKEN}`;
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=true&overview=full&geometries=geojson&steps=true&access_token=${MAPBOX_PUBLIC_TOKEN}`;
 
     const response = await fetch(url);
     

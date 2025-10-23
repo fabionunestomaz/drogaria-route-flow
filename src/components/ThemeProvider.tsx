@@ -20,20 +20,19 @@ export function ThemeProvider({
   children,
   defaultTheme = "dark",
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
-    () => (localStorage.getItem("theme") as Theme) || defaultTheme
-  );
+  // Force dark mode always - Drogacom Express
+  const [theme] = useState<Theme>("dark");
 
   useEffect(() => {
     const root = window.document.documentElement;
-    root.classList.remove("light", "dark");
-    root.classList.add(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme]);
+    root.classList.remove("light");
+    root.classList.add("dark");
+    localStorage.setItem("theme", "dark");
+  }, []);
 
   const value = {
     theme,
-    setTheme,
+    setTheme: () => {}, // Disabled - always dark mode
   };
 
   return (

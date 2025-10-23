@@ -275,7 +275,10 @@ const NewRoute = () => {
                           sequence: idx + 1
                         }))
                 }
-                route={optimizedRoute?.coordinates}
+                routes={optimizedRoute?.coordinates ? [{
+                  coordinates: optimizedRoute.coordinates,
+                  isSelected: true
+                }] : []}
               />
             </CardContent>
           </Card>

@@ -2,97 +2,80 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Force dark mode - Drogacom Express */
+html {
+  color-scheme: dark;
+}
+
+html.light {
+  color-scheme: dark;
+}
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 215 25% 12%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 215 25% 12%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 215 25% 12%;
-
-    --primary: 348 99% 38%;
+    /* Drogacom Express - Dark Theme (Forced) */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 358 95% 44%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 17% 96%;
-    --secondary-foreground: 215 25% 12%;
-
-    --muted: 210 17% 96%;
-    --muted-foreground: 215 14% 46%;
-
-    --accent: 348 99% 38%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 358 95% 44%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
-    --border: 215 14% 89%;
-    --input: 215 14% 89%;
-    --ring: 348 99% 38%;
-
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 358 95% 44%;
     --radius: 0.75rem;
-
-    --gradient-primary: linear-gradient(135deg, hsl(348 99% 38%), hsl(348 100% 45%));
-    --gradient-surface: linear-gradient(180deg, hsl(0 0% 98%), hsl(210 17% 96%));
     
-    --shadow-elevated: 0 10px 30px -10px hsl(348 99% 38% / 0.15);
-    --shadow-glow: 0 0 40px hsl(348 100% 45% / 0.2);
-
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(358 95% 44%), hsl(358 95% 35%));
+    --gradient-surface: linear-gradient(180deg, hsl(0 0% 5%), hsl(0 0% 0%));
+    
+    /* Shadows */
+    --shadow-elevated: 0 10px 30px -10px hsl(358 95% 44% / 0.3);
+    --shadow-glow: 0 0 40px hsl(358 95% 44% / 0.2);
+    
+    /* Animations */
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
 
   .dark {
-    --background: 220 13% 4%;
-    --foreground: 210 11% 95%;
-
-    --card: 220 13% 8%;
-    --card-foreground: 210 11% 95%;
-
-    --popover: 220 13% 8%;
-    --popover-foreground: 210 11% 95%;
-
-    --primary: 348 100% 60%;
+    /* Same as root - force dark mode */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 7%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 358 95% 44%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 220 10% 12%;
-    --secondary-foreground: 210 11% 95%;
-
-    --muted: 220 10% 12%;
-    --muted-foreground: 215 11% 65%;
-
-    --accent: 348 100% 60%;
+    --secondary: 0 0% 15%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 358 95% 44%;
     --accent-foreground: 0 0% 100%;
-
-    --destructive: 0 84% 60%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-
     --success: 142 71% 45%;
     --success-foreground: 0 0% 100%;
-
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
-
-    --border: 220 10% 15%;
-    --input: 220 10% 15%;
-    --ring: 348 100% 60%;
-
-    --gradient-primary: linear-gradient(135deg, hsl(348 100% 60%), hsl(348 100% 70%));
-    --gradient-surface: linear-gradient(180deg, hsl(220 13% 6%), hsl(220 10% 10%));
-    
-    --shadow-elevated: 0 10px 30px -10px hsl(348 100% 60% / 0.3);
-    --shadow-glow: 0 0 40px hsl(348 100% 70% / 0.3);
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 358 95% 44%;
   }
 }
 
@@ -102,41 +85,41 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
 
   html {
     scroll-behavior: smooth;
   }
+}
 
+@layer utilities {
   .gradient-primary {
     background: var(--gradient-primary);
   }
-
+  
   .gradient-surface {
     background: var(--gradient-surface);
   }
-
+  
   .shadow-elevated {
     box-shadow: var(--shadow-elevated);
   }
-
+  
   .shadow-glow {
     box-shadow: var(--shadow-glow);
   }
-
+  
   .transition-smooth {
     transition: var(--transition-smooth);
   }
 
-  /* Touch-friendly minimum sizes */
   .touch-target {
     min-height: 44px;
     min-width: 44px;
   }
 
-  /* Map container fix for mobile */
   .map-container {
     height: 65vh;
     min-height: 400px;

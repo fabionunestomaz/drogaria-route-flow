@@ -13,15 +13,21 @@ interface RouteMapProps {
     label?: string;
     sequence?: number;
   }>;
-  route?: Array<[number, number]>;
+  routes?: Array<{
+    coordinates: Array<[number, number]>;
+    isSelected?: boolean;
+    index?: number;
+  }>;
   className?: string;
+  onCenterMap?: () => void;
 }
 
 const RouteMap = ({
   origin,
   destinations,
-  route,
-  className = 'w-full h-full'
+  routes,
+  className = 'w-full h-full',
+  onCenterMap
 }: RouteMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -32,9 +38,10 @@ const RouteMap = ({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: origin ? [origin.lng, origin.lat] : [-46.6333, -23.5505],
       zoom: 12,
+      pitch: 45,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -53,8 +60,9 @@ const RouteMap = ({
 
     if (origin) {
       const el = document.createElement('div');
-      el.className = 'w-10 h-10 rounded-full border-4 border-white shadow-lg bg-green-500 flex items-center justify-center text-white font-bold';
-      el.innerHTML = 'F';
+      el.className = 'w-12 h-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold animate-pulse';
+      el.style.background = '#E10600';
+      el.innerHTML = '🏪';
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([origin.lng, origin.lat])
@@ -71,8 +79,9 @@ const RouteMap = ({
 
     destinations.forEach(({ lng, lat, label, sequence }) => {
       const el = document.createElement('div');
-      el.className = 'w-10 h-10 rounded-full border-4 border-white shadow-lg bg-blue-500 flex items-center justify-center text-white font-bold';
-      el.innerHTML = sequence?.toString() || '?';
+      el.className = 'w-12 h-12 rounded-full border-4 border-white shadow-lg flex items-center justify-center text-white font-bold animate-bounce';
+      el.style.background = '#E10600';
+      el.innerHTML = sequence?.toString() || '📍';
 
       const marker = new mapboxgl.Marker(el)
         .setLngLat([lng, lat])
@@ -96,45 +105,59 @@ const RouteMap = ({
   }, [origin, destinations]);
 
   useEffect(() => {
-    if (!map.current || !route || route.length < 2) return;
+    if (!map.current || !routes || routes.length === 0) return;
 
-    map.current.on('load', () => {
+    const updateRoutes = () => {
       if (!map.current) return;
 
-      if (map.current.getLayer('route')) {
-        map.current.removeLayer('route');
-      }
-      if (map.current.getSource('route')) {
-        map.current.removeSource('route');
-      }
+      routes.forEach((route, idx) => {
+        const sourceId = `route-${idx}`;
+        const layerId = `route-layer-${idx}`;
 
-      map.current.addSource('route', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: {
-            type: 'LineString',
-            coordinates: route
+        if (map.current.getLayer(layerId)) {
+          map.current.removeLayer(layerId);
+        }
+        if (map.current.getSource(sourceId)) {
+          map.current.removeSource(sourceId);
+        }
+
+        if (route.coordinates.length < 2) return;
+
+        map.current.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            properties: {},
+            geometry: {
+              type: 'LineString',
+              coordinates: route.coordinates
+            }
           }
-        }
-      });
+        });
 
-      map.current.addLayer({
-        id: 'route',
-        type: 'line',
-        source: 'route',
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round'
-        },
-        paint: {
-          'line-color': '#3b82f6',
-          'line-width': 4
-        }
+        map.current.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round'
+          },
+          paint: {
+            'line-color': route.isSelected ? '#E10600' : '#666666',
+            'line-width': route.isSelected ? 5 : 3,
+            'line-opacity': route.isSelected ? 1 : 0.5
+          }
+        });
       });
-    });
-  }, [route]);
+    };
+
+    if (map.current.isStyleLoaded()) {
+      updateRoutes();
+    } else {
+      map.current.on('load', updateRoutes);
+    }
+  }, [routes]);
 
   return <div ref={mapContainer} className={className} />;
 };

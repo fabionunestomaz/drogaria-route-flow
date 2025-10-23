@@ -200,7 +200,10 @@ const RouteDetails = () => {
                   label: d.customer.name,
                   sequence: d.sequence
                 }))}
-                route={batch?.optimized_route?.coordinates}
+                routes={batch?.optimized_route?.coordinates ? [{
+                  coordinates: batch.optimized_route.coordinates,
+                  isSelected: true
+                }] : []}
               />
             </CardContent>
           </Card>

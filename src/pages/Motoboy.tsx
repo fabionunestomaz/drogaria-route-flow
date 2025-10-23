@@ -192,7 +192,10 @@ const Motoboy = () => {
                     label: d.customer?.name || d.address,
                     sequence: d.sequence
                   }))}
-                  route={activeBatch.optimized_route?.coordinates}
+                  routes={activeBatch.optimized_route?.coordinates ? [{
+                    coordinates: activeBatch.optimized_route.coordinates,
+                    isSelected: true
+                  }] : []}
                 />
               </Card>
             )}

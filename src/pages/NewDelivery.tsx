@@ -1,18 +1,20 @@
-import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { MapPin, Navigation, Clock, DollarSign, Package } from "lucide-react";
-import AddressAutocomplete from "@/components/AddressAutocomplete";
-import RouteMap from "@/components/RouteMap";
-import { geocodeAddress } from "@/lib/mapbox";
-import { calculateRoute } from "@/lib/mapboxDirections";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import AddressAutocomplete from '@/components/AddressAutocomplete';
+import RouteMap from '@/components/RouteMap';
+import { calculateRoute } from '@/lib/mapboxDirections';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { usePharmacySettings } from '@/hooks/usePharmacySettings';
+import { toast } from 'sonner';
+import { searchAddresses } from '@/lib/mapbox';
+import { Clock, MapPin, DollarSign, Zap } from 'lucide-react';
 
 const DROGACOM_ADDRESS = "Avenida Luiz Eduardo Magalhães, 657 - São Félix do Coribe, BA, 47670-025";
 
@@ -22,32 +24,29 @@ interface Location {
   address: string;
 }
 
-export default function NewDelivery() {
+const NewDelivery = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+  const { settings } = usePharmacySettings();
   const [origin, setOrigin] = useState<Location | null>(null);
   const [destination, setDestination] = useState<Location | null>(null);
-  const [destAddress, setDestAddress] = useState("");
-  const [notes, setNotes] = useState("");
-  
-  const [routeData, setRouteData] = useState<any>(null);
-  const [distance, setDistance] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
-  const [calculatedPrice, setCalculatedPrice] = useState<number>(0);
-  const [manualPrice, setManualPrice] = useState<string>("");
-  
+  const [allRoutes, setAllRoutes] = useState<any[]>([]);
+  const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
+  const [distance, setDistance] = useState<number | null>(null);
+  const [duration, setDuration] = useState<number | null>(null);
+  const [calculatedPrice, setCalculatedPrice] = useState<number | null>(null);
+  const [manualPrice, setManualPrice] = useState<string>('');
+  const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [calculating, setCalculating] = useState(false);
 
-  // Geocodificar endereço de origem fixo
   useEffect(() => {
     const initOrigin = async () => {
-      const result = await geocodeAddress(DROGACOM_ADDRESS);
-      if (result) {
+      const results = await searchAddresses(DROGACOM_ADDRESS);
+      if (results && results.length > 0) {
         setOrigin({
-          lat: result.center[1],
-          lng: result.center[0],
+          lat: results[0].center[1],
+          lng: results[0].center[0],
           address: DROGACOM_ADDRESS
         });
       }
@@ -55,57 +54,46 @@ export default function NewDelivery() {
     initOrigin();
   }, []);
 
-  // Calcular rota quando origem e destino estiverem definidos
   useEffect(() => {
-    if (!origin || !destination) {
-      setRouteData(null);
-      setDistance(0);
-      setDuration(0);
-      setCalculatedPrice(0);
-      return;
-    }
+    if (!origin || !destination || !settings) return;
 
-    const calculateRouteData = async () => {
+    const fetchRoute = async () => {
       setCalculating(true);
       try {
-        const route = await calculateRoute(
+        const routeData = await calculateRoute(
           origin.lng,
           origin.lat,
           destination.lng,
           destination.lat
         );
 
-        if (route && route.routes && route.routes.length > 0) {
-          // Pegar a rota mais rápida (já vem ordenada por duração)
-          const bestRoute = route.routes[0];
-          
-          setRouteData(bestRoute.geometry);
-          setDistance(bestRoute.distance / 1000); // converter para km
-          setDuration(Math.round(bestRoute.duration / 60)); // converter para minutos
+        if (routeData && routeData.routes && routeData.routes.length > 0) {
+          const sortedRoutes = routeData.routes.sort((a, b) => a.duration - b.duration);
+          setAllRoutes(sortedRoutes);
+          setSelectedRouteIndex(0);
 
-          // Calcular preço: R$ 5,00 base + R$ 2,00 por km
-          const basePrice = 5.0;
-          const pricePerKm = 2.0;
-          const totalPrice = basePrice + (bestRoute.distance / 1000) * pricePerKm;
-          
-          setCalculatedPrice(Number(totalPrice.toFixed(2)));
-          setManualPrice(totalPrice.toFixed(2));
-          
-          toast.success("Rota calculada com sucesso!");
+          const fastestRoute = sortedRoutes[0];
+          setDistance(fastestRoute.distance / 1000);
+          setDuration(Math.round(fastestRoute.duration / 60));
+
+          const basePrice = settings.base_price;
+          const pricePerKm = settings.price_per_km;
+          const price = basePrice + (fastestRoute.distance / 1000) * pricePerKm;
+          setCalculatedPrice(price);
+          setManualPrice(price.toFixed(2));
         }
       } catch (error) {
-        console.error("Erro ao calcular rota:", error);
-        toast.error("Erro ao calcular rota");
+        console.error('Erro ao calcular rota:', error);
+        toast.error('Erro ao calcular rota');
       } finally {
         setCalculating(false);
       }
     };
 
-    calculateRouteData();
-  }, [origin, destination]);
+    fetchRoute();
+  }, [origin, destination, settings]);
 
   const handleDestinationChange = (address: string, coords?: { lat: number; lng: number }) => {
-    setDestAddress(address);
     if (coords) {
       setDestination({
         lat: coords.lat,
@@ -117,26 +105,26 @@ export default function NewDelivery() {
 
   const handleSubmit = async () => {
     if (!user) {
-      toast.error("Você precisa estar logado");
+      toast.error('Você precisa estar logado');
       return;
     }
 
     if (!destination) {
-      toast.error("Selecione um endereço de entrega");
+      toast.error('Selecione um endereço de entrega');
       return;
     }
 
     const finalPrice = manualPrice ? parseFloat(manualPrice) : calculatedPrice;
     
     if (!finalPrice || finalPrice <= 0) {
-      toast.error("Valor inválido");
+      toast.error('Valor inválido');
       return;
     }
 
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("delivery_requests")
+        .from('delivery_requests')
         .insert({
           customer_id: user.id,
           origin_address: DROGACOM_ADDRESS,
@@ -149,118 +137,148 @@ export default function NewDelivery() {
           estimated_time: duration,
           estimated_price: finalPrice,
           notes: notes || null,
-          status: "pending"
+          status: 'pending'
         })
         .select()
         .single();
 
       if (error) throw error;
 
-      toast.success("Pedido de entrega criado com sucesso!");
+      toast.success('Pedido de entrega criado com sucesso!');
       navigate(`/ride-tracking/${data.id}`);
     } catch (error) {
-      console.error("Erro ao criar pedido:", error);
-      toast.error("Erro ao criar pedido de entrega");
+      console.error('Erro ao criar pedido:', error);
+      toast.error('Erro ao criar pedido de entrega');
     } finally {
       setLoading(false);
     }
   };
 
+  const routesForMap = allRoutes.map((route, idx) => ({
+    coordinates: route.geometry.coordinates,
+    isSelected: idx === selectedRouteIndex,
+    index: idx
+  }));
+
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Mapa */}
-      <div className="h-[50vh] relative">
-        <RouteMap
-          origin={origin ? { lat: origin.lat, lng: origin.lng } : undefined}
-          destinations={destination ? [{ 
-            lat: destination.lat, 
-            lng: destination.lng,
-            label: "Entrega"
-          }] : []}
-          route={routeData}
-          className="w-full h-full"
-        />
-        {calculating && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-            <div className="bg-background p-4 rounded-lg">
-              <p className="text-sm">Calculando melhor rota...</p>
-            </div>
-          </div>
+    <div className="container mx-auto p-4 space-y-4">
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold">Nova Entrega</h1>
+        {allRoutes.length > 1 && (
+          <Badge variant="secondary" className="gap-1">
+            <Zap className="w-3 h-3" />
+            {allRoutes.length} rotas encontradas
+          </Badge>
         )}
       </div>
 
-      {/* Formulário */}
-      <div className="flex-1 overflow-auto p-4 pb-24">
-        <Card className="max-w-2xl mx-auto p-6 space-y-6">
-          <div>
-            <h1 className="text-2xl font-bold mb-2">Nova Entrega</h1>
-            <p className="text-muted-foreground text-sm">
-              Configure sua entrega e veja a melhor rota no mapa
-            </p>
-          </div>
+      <div className="grid md:grid-cols-2 gap-4">
+        <Card className="p-4">
+          <RouteMap
+            origin={origin ? { lat: origin.lat, lng: origin.lng, label: 'Drogacom' } : undefined}
+            destinations={destination ? [{ lat: destination.lat, lng: destination.lng, label: 'Entrega' }] : []}
+            routes={routesForMap}
+            className="h-[400px] rounded-lg"
+          />
+        </Card>
 
-          {/* Origem (Fixo) */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <Package className="w-4 h-4 text-primary" />
-              Local de Coleta (Drogacom)
-            </Label>
-            <div className="p-3 bg-muted rounded-lg border border-border">
-              <p className="text-sm">{DROGACOM_ADDRESS}</p>
+        <Card className="p-6 space-y-4">
+          <div>
+            <Label>Local de Coleta (Fixo)</Label>
+            <div className="p-3 bg-muted rounded-lg mt-2 text-sm">
+              {DROGACOM_ADDRESS}
             </div>
           </div>
 
-          {/* Destino (Autocomplete) */}
-          <div className="space-y-2">
-            <Label className="flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-primary" />
-              Endereço de Entrega
-            </Label>
+          <div>
+            <Label>Endereço de Entrega</Label>
             <AddressAutocomplete
-              value={destAddress}
+              value={destination?.address || ''}
               onChange={handleDestinationChange}
               placeholder="Digite o endereço de entrega..."
             />
           </div>
 
-          {/* Informações da Rota */}
-          {destination && (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <Navigation className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Distância</p>
-                    <p className="text-lg font-bold">{distance.toFixed(2)} km</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Tempo Estimado</p>
-                    <p className="text-lg font-bold">{duration} min</p>
-                  </div>
-                </div>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center gap-3">
-                  <DollarSign className="w-5 h-5 text-primary" />
-                  <div>
-                    <p className="text-xs text-muted-foreground">Valor Calculado</p>
-                    <p className="text-lg font-bold">R$ {calculatedPrice.toFixed(2)}</p>
-                  </div>
-                </div>
-              </Card>
+          {calculating && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground animate-pulse">
+              <Zap className="w-4 h-4" />
+              Calculando melhor rota...
             </div>
           )}
 
-          {/* Valor Manual (Editável) */}
-          {destination && (
+          {allRoutes.length > 1 && (
             <div className="space-y-2">
+              <Label>Escolha a rota preferida:</Label>
+              <div className="grid gap-2">
+                {allRoutes.map((route, idx) => {
+                  const routeDistance = (route.distance / 1000).toFixed(2);
+                  const routeDuration = Math.round(route.duration / 60);
+                  const basePrice = settings?.base_price || 5;
+                  const pricePerKm = settings?.price_per_km || 2;
+                  const routePrice = (basePrice + (route.distance / 1000) * pricePerKm).toFixed(2);
+                  
+                  return (
+                    <Button
+                      key={idx}
+                      variant={idx === selectedRouteIndex ? "default" : "outline"}
+                      className="justify-start h-auto p-3"
+                      onClick={() => {
+                        setSelectedRouteIndex(idx);
+                        setDistance(route.distance / 1000);
+                        setDuration(routeDuration);
+                        setCalculatedPrice(Number(routePrice));
+                        setManualPrice(routePrice);
+                      }}
+                    >
+                      <div className="flex flex-col items-start gap-1 w-full">
+                        <div className="flex items-center gap-2 font-semibold">
+                          {idx === 0 && <Zap className="w-4 h-4" />}
+                          Rota {idx + 1} {idx === 0 && '(Mais rápida)'}
+                        </div>
+                        <div className="flex gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3" />
+                            {routeDuration} min
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {routeDistance} km
+                          </span>
+                          <span className="flex items-center gap-1">
+                            <DollarSign className="w-3 h-3" />
+                            R$ {routePrice}
+                          </span>
+                        </div>
+                      </div>
+                    </Button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {distance && duration && (
+            <div className="grid grid-cols-3 gap-4 p-4 bg-muted/50 rounded-lg">
+              <div className="flex flex-col items-center gap-1">
+                <MapPin className="w-5 h-5 text-primary" />
+                <div className="text-xs text-muted-foreground">Distância</div>
+                <div className="font-semibold">{distance.toFixed(2)} km</div>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <Clock className="w-5 h-5 text-primary" />
+                <div className="text-xs text-muted-foreground">Tempo</div>
+                <div className="font-semibold">{duration} min</div>
+              </div>
+              <div className="flex flex-col items-center gap-1">
+                <DollarSign className="w-5 h-5 text-primary" />
+                <div className="text-xs text-muted-foreground">Valor sugerido</div>
+                <div className="font-semibold">R$ {calculatedPrice?.toFixed(2)}</div>
+              </div>
+            </div>
+          )}
+
+          {destination && (
+            <div>
               <Label>Valor da Entrega (editável)</Label>
               <Input
                 type="number"
@@ -269,35 +287,34 @@ export default function NewDelivery() {
                 value={manualPrice}
                 onChange={(e) => setManualPrice(e.target.value)}
                 placeholder="R$ 0,00"
+                className="mt-2"
               />
-              <p className="text-xs text-muted-foreground">
-                Valor sugerido: R$ {calculatedPrice.toFixed(2)} (Base: R$ 5,00 + R$ 2,00/km)
-              </p>
             </div>
           )}
 
-          {/* Observações */}
-          <div className="space-y-2">
+          <div>
             <Label>Observações (opcional)</Label>
             <Textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Ex: Entregar no portão, ligar antes de chegar..."
+              placeholder="Ex: Entregar no portão, ligar antes..."
               rows={3}
+              className="mt-2"
             />
           </div>
 
-          {/* Botão de Confirmação */}
           <Button
             onClick={handleSubmit}
             disabled={loading || !destination || calculating}
             className="w-full"
             size="lg"
           >
-            {loading ? "Criando..." : "Confirmar Entrega"}
+            {loading ? 'Criando...' : 'Confirmar Entrega'}
           </Button>
         </Card>
       </div>
     </div>
   );
-}
+};
+
+export default NewDelivery;
