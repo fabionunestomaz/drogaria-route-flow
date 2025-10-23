@@ -44,6 +44,71 @@ export type Database = {
         }
         Relationships: []
       }
+      cart_items: {
+        Row: {
+          created_at: string
+          customer_id: string
+          id: string
+          product_id: string
+          quantity: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          customer_id: string
+          id?: string
+          product_id: string
+          quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          customer_id?: string
+          id?: string
+          product_id?: string
+          quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categories: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           active: boolean | null
@@ -408,6 +473,59 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      products: {
+        Row: {
+          active: boolean
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          name: string
+          pharmacy_id: string
+          price: number
+          requires_prescription: boolean
+          stock_quantity: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name: string
+          pharmacy_id: string
+          price: number
+          requires_prescription?: boolean
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          name?: string
+          pharmacy_id?: string
+          price?: number
+          requires_prescription?: boolean
+          stock_quantity?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "products_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
