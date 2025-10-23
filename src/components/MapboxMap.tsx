@@ -62,7 +62,8 @@ const MapboxMap = ({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
+      pitch: 45,
       center,
       zoom,
     });
@@ -79,7 +80,7 @@ const MapboxMap = ({
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [tokenReady, center, zoom, onMapClick]);
 
   // Atualizar centro do mapa
   useEffect(() => {
@@ -169,23 +170,12 @@ const MapboxMap = ({
     });
   }, [route]);
 
-  if (!hasMapboxToken()) {
+  if (!tokenReady) {
     return (
       <Card className={`${className} flex items-center justify-center bg-muted/50`}>
         <div className="text-center p-8">
-          <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-          <h3 className="font-semibold text-lg mb-2">Token Mapbox necessário</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Configure seu token público do Mapbox para visualizar os mapas
-          </p>
-          <a 
-            href="https://mapbox.com/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-primary hover:underline"
-          >
-            Obter token gratuito →
-          </a>
+          <MapPin className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando mapa...</p>
         </div>
       </Card>
     );

@@ -1,4 +1,4 @@
-import { MAPBOX_PUBLIC_TOKEN } from './mapboxConfig';
+import { getMapboxToken } from './mapboxConfig';
 
 export interface DirectionsResponse {
   routes: Array<{
@@ -19,8 +19,14 @@ export const calculateRoute = async (
   destLat: number
 ): Promise<DirectionsResponse | null> => {
   try {
+    const token = await getMapboxToken();
+    if (!token) {
+      console.error('Token Mapbox não configurado');
+      return null;
+    }
+
     const coordinates = `${originLng},${originLat};${destLng},${destLat}`;
-    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=true&overview=full&geometries=geojson&steps=true&access_token=${MAPBOX_PUBLIC_TOKEN}`;
+    const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=true&overview=full&geometries=geojson&steps=true&access_token=${token}`;
 
     const response = await fetch(url);
     

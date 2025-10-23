@@ -1,9 +1,9 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MAPBOX_PUBLIC_TOKEN } from '@/lib/mapboxConfig';
-
-mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+import { getMapboxToken } from '@/lib/mapboxConfig';
+import { Card } from './ui/card';
+import { MapPin, Loader2 } from 'lucide-react';
 
 interface RouteMapProps {
   origin?: { lat: number; lng: number; label?: string };
@@ -32,9 +32,32 @@ const RouteMap = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [tokenReady, setTokenReady] = useState(false);
+  const [tokenError, setTokenError] = useState(false);
 
+  // Buscar token do Mapbox
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    const initToken = async () => {
+      try {
+        const token = await getMapboxToken();
+        if (token) {
+          mapboxgl.accessToken = token;
+          setTokenReady(true);
+        } else {
+          console.error('Token Mapbox não configurado');
+          setTokenError(true);
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar token:', error);
+        setTokenError(true);
+      }
+    };
+    initToken();
+  }, []);
+
+  // Inicializar mapa
+  useEffect(() => {
+    if (!mapContainer.current || map.current || !tokenReady) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -50,7 +73,7 @@ const RouteMap = ({
       map.current?.remove();
       map.current = null;
     };
-  }, []);
+  }, [tokenReady, origin]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -158,6 +181,31 @@ const RouteMap = ({
       map.current.on('load', updateRoutes);
     }
   }, [routes]);
+
+  if (tokenError) {
+    return (
+      <Card className={`${className} flex items-center justify-center bg-muted/50`}>
+        <div className="text-center p-8">
+          <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-lg mb-2">Token Mapbox necessário</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configure seu token público do Mapbox nos secrets do projeto
+          </p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!tokenReady) {
+    return (
+      <Card className={`${className} flex items-center justify-center bg-muted/50`}>
+        <div className="text-center p-8">
+          <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando mapa...</p>
+        </div>
+      </Card>
+    );
+  }
 
   return <div ref={mapContainer} className={className} />;
 };

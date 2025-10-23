@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MAPBOX_PUBLIC_TOKEN, hasMapboxToken } from '@/lib/mapboxConfig';
+import { getMapboxToken } from '@/lib/mapboxConfig';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
-import { MapPin, Navigation, Package } from 'lucide-react';
+import { MapPin, Navigation, Package, Loader2 } from 'lucide-react';
 
 interface DeliveryMarker {
   id: string;
@@ -27,17 +27,39 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryMarker | null>(null);
+  const [tokenReady, setTokenReady] = useState(false);
+  const [tokenError, setTokenError] = useState(false);
 
+  // Buscar token do Mapbox
   useEffect(() => {
-    if (!mapContainer.current || map.current || !hasMapboxToken()) return;
+    const initToken = async () => {
+      try {
+        const token = await getMapboxToken();
+        if (token) {
+          mapboxgl.accessToken = token;
+          setTokenReady(true);
+        } else {
+          console.error('Token Mapbox não configurado');
+          setTokenError(true);
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar token:', error);
+        setTokenError(true);
+      }
+    };
+    initToken();
+  }, []);
 
-    mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+  // Inicializar mapa
+  useEffect(() => {
+    if (!mapContainer.current || map.current || !tokenReady) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: 'mapbox://styles/mapbox/dark-v11',
       center: [-47.8822, -15.7942], // Brasília center
-      zoom: 11
+      zoom: 11,
+      pitch: 45,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -192,7 +214,7 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
     return () => {
       map.current?.remove();
     };
-  }, []);
+  }, [tokenReady]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -239,23 +261,26 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
     return statusMap[status] || statusMap.pending;
   };
 
-  if (!hasMapboxToken()) {
+  if (tokenError) {
     return (
       <Card className={`${className} flex items-center justify-center bg-muted/50 h-[600px]`}>
         <div className="text-center p-8">
           <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
           <h3 className="font-semibold text-lg mb-2">Token Mapbox necessário</h3>
           <p className="text-sm text-muted-foreground mb-4">
-            Configure seu token público do Mapbox para visualizar o mapa de clusters
+            Configure seu token público do Mapbox nos secrets do projeto
           </p>
-          <a 
-            href="https://mapbox.com/" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-primary hover:underline"
-          >
-            Obter token gratuito →
-          </a>
+        </div>
+      </Card>
+    );
+  }
+
+  if (!tokenReady) {
+    return (
+      <Card className={`${className} flex items-center justify-center bg-muted/50 h-[600px]`}>
+        <div className="text-center p-8">
+          <Loader2 className="h-12 w-12 mx-auto mb-4 text-primary animate-spin" />
+          <p className="text-sm text-muted-foreground">Carregando mapa...</p>
         </div>
       </Card>
     );
