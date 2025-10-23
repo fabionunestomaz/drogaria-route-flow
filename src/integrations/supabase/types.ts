@@ -432,6 +432,42 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          created_at: string
+          data: Json | null
+          id: string
+          read: boolean
+          sent_at: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          read?: boolean
+          sent_at?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          data?: Json | null
+          id?: string
+          read?: boolean
+          sent_at?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       pharmacy_settings: {
         Row: {
           address: string
@@ -563,33 +599,90 @@ export type Database = {
         }
         Relationships: []
       }
+      push_subscriptions: {
+        Row: {
+          auth: string
+          created_at: string
+          endpoint: string
+          id: string
+          last_used_at: string
+          p256dh: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          auth: string
+          created_at?: string
+          endpoint: string
+          id?: string
+          last_used_at?: string
+          p256dh: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          auth?: string
+          created_at?: string
+          endpoint?: string
+          id?: string
+          last_used_at?: string
+          p256dh?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       ratings: {
         Row: {
           comment: string | null
           created_at: string
           customer_id: string
+          delivery_speed_stars: number | null
           driver_id: string | null
+          helpful_count: number
           id: string
+          pharmacy_response: string | null
+          pharmacy_response_at: string | null
+          product_quality_stars: number | null
+          rating_type: string
           ride_id: string
+          service_quality_stars: number | null
           stars: number
+          verified_purchase: boolean
         }
         Insert: {
           comment?: string | null
           created_at?: string
           customer_id: string
+          delivery_speed_stars?: number | null
           driver_id?: string | null
+          helpful_count?: number
           id?: string
+          pharmacy_response?: string | null
+          pharmacy_response_at?: string | null
+          product_quality_stars?: number | null
+          rating_type?: string
           ride_id: string
+          service_quality_stars?: number | null
           stars: number
+          verified_purchase?: boolean
         }
         Update: {
           comment?: string | null
           created_at?: string
           customer_id?: string
+          delivery_speed_stars?: number | null
           driver_id?: string | null
+          helpful_count?: number
           id?: string
+          pharmacy_response?: string | null
+          pharmacy_response_at?: string | null
+          product_quality_stars?: number | null
+          rating_type?: string
           ride_id?: string
+          service_quality_stars?: number | null
           stars?: number
+          verified_purchase?: boolean
         }
         Relationships: [
           {
@@ -844,6 +937,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_notification: {
+        Args: {
+          p_body: string
+          p_data?: Json
+          p_title: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

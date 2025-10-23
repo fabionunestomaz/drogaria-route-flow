@@ -1,6 +1,7 @@
 import { Moon, Sun, Menu, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTheme } from "@/components/ThemeProvider";
+import { NotificationBell } from "@/components/NotificationBell";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -62,6 +63,7 @@ const Header = () => {
         </nav>
 
         <div className="flex items-center gap-2">
+          {user && <NotificationBell />}
           <Button
             variant="ghost"
             size="icon"
