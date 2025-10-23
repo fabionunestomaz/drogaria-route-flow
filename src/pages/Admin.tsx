@@ -201,18 +201,25 @@ const Admin = () => {
             <TabsContent value="monitor" className="space-y-6">
               {/* Clustered Map */}
               <ClusteredMap
-                deliveries={activeBatches.flatMap(batch =>
-                  batch.deliveries.map(d => ({
+                deliveries={activeBatches.flatMap(batch => {
+                  // Debug: verificar estrutura do driver
+                  console.log('Admin - batch.driver:', batch.driver);
+                  
+                  const driverName = Array.isArray(batch.driver?.profiles) 
+                    ? batch.driver.profiles[0]?.name 
+                    : (batch.driver?.profiles as any)?.name;
+                  
+                  return batch.deliveries.map(d => ({
                     id: d.id,
                     lat: d.lat,
                     lng: d.lng,
                     status: d.status,
                     address: d.address,
-                    customerName: d.customers?.name,
-                    driverName: batch.driver?.profiles?.[0]?.name,
-                    orderNumber: (d as any).order_number
-                  }))
-                )}
+                    customerName: d.customers?.name || 'Cliente',
+                    driverName: driverName || 'Sem motorista',
+                    orderNumber: (d as any).order_number || d.id.substring(0, 8)
+                  }));
+                })}
               />
 
               {/* Active Routes */}
@@ -232,11 +239,13 @@ const Admin = () => {
                       return (
                         <Card key={batch.id} className="p-4">
                           <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                <h3 className="font-semibold">
-                                  {batch.driver?.profiles?.[0]?.name || 'Sem motorista'}
-                                </h3>
+                             <div className="flex-1">
+                               <div className="flex items-center gap-2 mb-2">
+                                 <h3 className="font-semibold">
+                                   {Array.isArray(batch.driver?.profiles) 
+                                     ? batch.driver.profiles[0]?.name 
+                                     : (batch.driver?.profiles as any)?.name || 'Sem motorista'}
+                                 </h3>
                                 <Badge className={statusBadge.className}>
                                   {statusBadge.label}
                                 </Badge>
@@ -270,7 +279,9 @@ const Admin = () => {
                                  <SelectContent>
                                    {drivers.map(driver => (
                                      <SelectItem key={driver.id} value={driver.user_id}>
-                                       {driver.profiles?.[0]?.name || 'Motorista'}
+                                       {Array.isArray(driver.profiles) 
+                                         ? driver.profiles[0]?.name 
+                                         : (driver.profiles as any)?.name || 'Motorista'}
                                      </SelectItem>
                                    ))}
                                  </SelectContent>

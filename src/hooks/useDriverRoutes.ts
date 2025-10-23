@@ -34,7 +34,12 @@ export const useDriverRoutes = () => {
   const fetchDriverRoutes = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+      if (!user) {
+        console.log('DriverRoutes - Nenhum usuário autenticado');
+        return;
+      }
+
+      console.log('DriverRoutes - Buscando rotas para user.id:', user.id);
 
       // Buscar lote ativo
       const { data: activeBatchData, error: activeBatchError } = await supabase
@@ -52,8 +57,13 @@ export const useDriverRoutes = () => {
         .limit(1)
         .single();
 
+      console.log('DriverRoutes - activeBatchData:', activeBatchData);
+      console.log('DriverRoutes - activeBatchError:', activeBatchError);
+
       if (!activeBatchError && activeBatchData) {
         setActiveBatch(activeBatchData as any);
+      } else {
+        setActiveBatch(null);
       }
 
       // Buscar histórico
