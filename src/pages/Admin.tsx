@@ -554,17 +554,22 @@ const Admin = () => {
                             <div className="flex flex-col gap-2">
                               <Select onValueChange={(value) => {
                                 reassignDriver(batch.id, value);
-                                updateBatchStatus(batch.id, 'in_progress');
+                                updateBatchStatus(batch.id, 'assigned');
                               }}>
                                 <SelectTrigger className="w-[180px]">
                                   <SelectValue placeholder="Atribuir motorista" />
                                 </SelectTrigger>
                                  <SelectContent>
-                                   {drivers.filter(d => d.shift_status === 'online').map(driver => (
-                                     <SelectItem key={driver.id} value={driver.user_id}>
-                                       {driver.profiles?.[0]?.name || 'Motorista'}
-                                     </SelectItem>
-                                   ))}
+                                   {drivers.length === 0 ? (
+                                     <div className="p-2 text-sm text-muted-foreground">Nenhum motorista disponível</div>
+                                   ) : (
+                                     drivers.map(driver => (
+                                       <SelectItem key={driver.id} value={driver.user_id}>
+                                         {driver.profiles?.[0]?.name || 'Motorista'} 
+                                         {driver.shift_status === 'online' && ' 🟢'}
+                                       </SelectItem>
+                                     ))
+                                   )}
                                  </SelectContent>
                               </Select>
                               <Button 
