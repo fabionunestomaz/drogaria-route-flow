@@ -5,12 +5,18 @@ let cachedToken: string | null = null;
 // Busca o token do Mapbox de forma assíncrona
 export const getMapboxToken = async (): Promise<string> => {
   // Se já temos o token em cache, retorna
-  if (cachedToken) return cachedToken;
+  if (cachedToken) {
+    console.log("🗺️ Using cached Mapbox token:", cachedToken.substring(0, 20) + "...");
+    return cachedToken;
+  }
 
   // Tenta buscar do .env primeiro (fallback)
   const envToken = import.meta.env.VITE_MAPBOX_TOKEN;
+  console.log("🗺️ Env token found:", envToken ? envToken.substring(0, 20) + "..." : "none");
+  
   if (envToken && envToken !== "COLE_SEU_TOKEN_MAPBOX_AQUI") {
     cachedToken = envToken;
+    console.log("✅ Using env token for Mapbox");
     return envToken;
   }
 
