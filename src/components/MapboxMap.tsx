@@ -1,9 +1,13 @@
 import { useEffect, useRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MAPBOX_PUBLIC_TOKEN } from '@/lib/mapboxConfig';
+import { MAPBOX_PUBLIC_TOKEN, hasMapboxToken } from '@/lib/mapboxConfig';
+import { Card } from './ui/card';
+import { MapPin } from 'lucide-react';
 
-mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+if (hasMapboxToken()) {
+  mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
+}
 
 interface MapboxMapProps {
   center?: [number, number]; // [lng, lat]
@@ -33,7 +37,7 @@ const MapboxMap = ({
 
   // Inicializar mapa
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current || !hasMapboxToken()) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -143,6 +147,28 @@ const MapboxMap = ({
       map.current.fitBounds(bounds, { padding: 50 });
     });
   }, [route]);
+
+  if (!hasMapboxToken()) {
+    return (
+      <Card className={`${className} flex items-center justify-center bg-muted/50`}>
+        <div className="text-center p-8">
+          <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-lg mb-2">Token Mapbox necessário</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configure seu token público do Mapbox para visualizar os mapas
+          </p>
+          <a 
+            href="https://mapbox.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline"
+          >
+            Obter token gratuito →
+          </a>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div ref={mapContainer} className={className} />

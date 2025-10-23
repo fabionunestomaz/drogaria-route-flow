@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MAPBOX_PUBLIC_TOKEN } from '@/lib/mapboxConfig';
+import { MAPBOX_PUBLIC_TOKEN, hasMapboxToken } from '@/lib/mapboxConfig';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { MapPin, Navigation, Package } from 'lucide-react';
@@ -29,7 +29,7 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryMarker | null>(null);
 
   useEffect(() => {
-    if (!mapContainer.current || map.current) return;
+    if (!mapContainer.current || map.current || !hasMapboxToken()) return;
 
     mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
 
@@ -238,6 +238,28 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
     };
     return statusMap[status] || statusMap.pending;
   };
+
+  if (!hasMapboxToken()) {
+    return (
+      <Card className={`${className} flex items-center justify-center bg-muted/50 h-[600px]`}>
+        <div className="text-center p-8">
+          <MapPin className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+          <h3 className="font-semibold text-lg mb-2">Token Mapbox necessário</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Configure seu token público do Mapbox para visualizar o mapa de clusters
+          </p>
+          <a 
+            href="https://mapbox.com/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline"
+          >
+            Obter token gratuito →
+          </a>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className={className}>
