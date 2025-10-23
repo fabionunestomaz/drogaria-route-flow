@@ -14,9 +14,12 @@ interface MapboxMapProps {
     lat: number;
     color?: string;
     label?: string;
+    draggable?: boolean;
   }>;
   route?: Array<[number, number]>;
   onMapClick?: (lng: number, lat: number) => void;
+  onMarkerDrag?: (lng: number, lat: number, markerIndex: number) => void;
+  styleType?: 'streets' | 'satellite' | 'satellite-streets';
   className?: string;
 }
 
@@ -26,6 +29,8 @@ const MapboxMap = ({
   markers = [],
   route,
   onMapClick,
+  onMarkerDrag,
+  styleType = 'streets',
   className = 'w-full h-full'
 }: MapboxMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -60,9 +65,15 @@ const MapboxMap = ({
   useEffect(() => {
     if (!mapContainer.current || map.current || !tokenReady) return;
 
+    const styleMap = {
+      'streets': 'mapbox://styles/mapbox/streets-v12',
+      'satellite': 'mapbox://styles/mapbox/satellite-v9',
+      'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: styleMap[styleType],
       center,
       zoom,
     });
@@ -79,7 +90,7 @@ const MapboxMap = ({
       map.current?.remove();
       map.current = null;
     };
-  }, [tokenReady, center, zoom, onMapClick]);
+  }, [tokenReady, center, zoom, onMapClick, styleType]);
 
   // Atualizar centro do mapa
   useEffect(() => {
@@ -97,16 +108,19 @@ const MapboxMap = ({
     markersRef.current = [];
 
     // Adicionar novos marcadores
-    markers.forEach(({ lng, lat, color = '#3b82f6', label }) => {
+    markers.forEach((markerData, index) => {
+      const { lng, lat, color = '#3b82f6', label, draggable = false } = markerData;
+      
       const el = document.createElement('div');
       el.className = 'w-8 h-8 rounded-full border-4 border-white shadow-lg';
       el.style.backgroundColor = color;
+      el.style.cursor = draggable ? 'grab' : 'pointer';
       
       if (label) {
         el.title = label;
       }
 
-      const marker = new mapboxgl.Marker(el)
+      const marker = new mapboxgl.Marker({ element: el, draggable })
         .setLngLat([lng, lat])
         .addTo(map.current!);
 
@@ -116,9 +130,17 @@ const MapboxMap = ({
         marker.setPopup(popup);
       }
 
+      // Handle drag event
+      if (draggable && onMarkerDrag) {
+        marker.on('dragend', () => {
+          const lngLat = marker.getLngLat();
+          onMarkerDrag(lngLat.lng, lngLat.lat, index);
+        });
+      }
+
       markersRef.current.push(marker);
     });
-  }, [markers]);
+  }, [markers, onMarkerDrag]);
 
   // Atualizar rota
   useEffect(() => {

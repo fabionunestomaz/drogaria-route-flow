@@ -41,6 +41,7 @@ import {
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
 import SeedDataButton from "@/components/SeedDataButton";
+import { Settings, Calculator } from "lucide-react";
 
 const Admin = () => {
   const { batches, kpis, loading, deleteBatch, updateBatchStatus, reassignDriver } = useAdminData();
@@ -137,6 +138,18 @@ const Admin = () => {
               </p>
             </div>
             <div className="flex gap-2">
+              <Button onClick={() => navigate('/settings')} variant="outline" size="sm">
+                <Settings className="mr-2 h-4 w-4" />
+                Configurações
+              </Button>
+              <Button onClick={() => navigate('/pricing-settings')} variant="outline" size="sm">
+                <Calculator className="mr-2 h-4 w-4" />
+                Calculadora
+              </Button>
+              <Button onClick={() => navigate('/analytics')} variant="outline" size="sm">
+                <BarChart3 className="mr-2 h-4 w-4" />
+                Analytics
+              </Button>
               <SeedDataButton />
               <Button onClick={() => navigate('/new-route')} size="lg">
                 <Package className="mr-2 h-5 w-5" />

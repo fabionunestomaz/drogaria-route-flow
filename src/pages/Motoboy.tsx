@@ -12,6 +12,10 @@ const Motoboy = () => {
   const navigate = useNavigate();
   const { activeBatch, historyBatches, loading, updateDeliveryStatus, updateBatchStatus } = useDriverRoutes();
 
+  // Debug log
+  console.log('Motoboy - activeBatch:', activeBatch);
+  console.log('Motoboy - historyBatches:', historyBatches);
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "in_progress":

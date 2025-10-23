@@ -17,6 +17,8 @@ import Admin from "./pages/Admin";
 import TrackingPublic from "./pages/TrackingPublic";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
+import PricingSettings from "./pages/PricingSettings";
+import Analytics from "./pages/Analytics";
 import Customers from "./pages/Customers";
 import NewRoute from "./pages/NewRoute";
 import RouteDetails from "./pages/RouteDetails";
@@ -75,6 +77,18 @@ const App = () => {
               <Route path="/settings" element={
                 <ProtectedRoute>
                   <Settings />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/pricing-settings" element={
+                <ProtectedRoute>
+                  <PricingSettings />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/analytics" element={
+                <ProtectedRoute>
+                  <Analytics />
                 </ProtectedRoute>
               } />
               

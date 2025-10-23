@@ -331,6 +331,48 @@ export type Database = {
           },
         ]
       }
+      delivery_pricing_config: {
+        Row: {
+          base_fee: number
+          cost_per_minute: number
+          created_at: string
+          gasoline_price: number
+          id: string
+          maintenance_per_km: number
+          minimum_price: number
+          profit_margin: number
+          updated_at: string
+          user_id: string
+          vehicle_consumption: number
+        }
+        Insert: {
+          base_fee?: number
+          cost_per_minute?: number
+          created_at?: string
+          gasoline_price?: number
+          id?: string
+          maintenance_per_km?: number
+          minimum_price?: number
+          profit_margin?: number
+          updated_at?: string
+          user_id: string
+          vehicle_consumption?: number
+        }
+        Update: {
+          base_fee?: number
+          cost_per_minute?: number
+          created_at?: string
+          gasoline_price?: number
+          id?: string
+          maintenance_per_km?: number
+          minimum_price?: number
+          profit_margin?: number
+          updated_at?: string
+          user_id?: string
+          vehicle_consumption?: number
+        }
+        Relationships: []
+      }
       delivery_requests: {
         Row: {
           created_at: string | null

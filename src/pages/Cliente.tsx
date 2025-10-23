@@ -14,7 +14,9 @@ import { geocodeAddress } from "@/lib/mapbox";
 import { calculateRoute as calculateMapboxRoute } from "@/lib/mapboxDirections";
 import { useDeliveryRequests } from "@/hooks/useDeliveryRequests";
 import { usePharmacySettings } from "@/hooks/usePharmacySettings";
+import { supabase } from '@/integrations/supabase/client';
 import MapboxMap from "@/components/MapboxMap";
+import MapStyleSelector from "@/components/MapStyleSelector";
 
 const Cliente = () => {
   const { requests, loading: loadingRequests, createRequest, cancelRequest } = useDeliveryRequests();
@@ -31,6 +33,7 @@ const Cliente = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
   const [isSearchingCep, setIsSearchingCep] = useState(false);
+  const [mapStyleType, setMapStyleType] = useState<'streets' | 'satellite' | 'satellite-streets'>('satellite-streets');
 
   // Fixar origem automaticamente com as configurações da farmácia
   useEffect(() => {
@@ -270,9 +273,23 @@ const Cliente = () => {
                           zoom={13}
                           markers={[
                             { lng: originCoords.lng, lat: originCoords.lat, color: '#22c55e', label: 'Origem' },
-                            { lng: destCoords.lng, lat: destCoords.lat, color: '#ef4444', label: 'Destino' }
+                            { lng: destCoords.lng, lat: destCoords.lat, color: '#ef4444', label: 'Destino', draggable: true }
                           ]}
                           route={routeCoordinates}
+                          styleType={mapStyleType}
+                          onMarkerDrag={async (lng, lat, index) => {
+                            if (index === 1) {
+                              setDestCoords({ lat, lng });
+                              const { data } = await supabase.functions.invoke('geocoding', {
+                                body: { type: 'reverse', lat, lng },
+                              });
+                              if (data?.features?.[0]?.place_name) {
+                                setDestination(data.features[0].place_name);
+                                calculateRoute();
+                                toast.success('Localização ajustada!');
+                              }
+                            }
+                          }}
                         />
                       </div>
                     )}
