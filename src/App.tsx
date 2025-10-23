@@ -20,6 +20,7 @@ import Settings from "./pages/Settings";
 import Customers from "./pages/Customers";
 import NewRoute from "./pages/NewRoute";
 import RouteDetails from "./pages/RouteDetails";
+import RideTracking from "./pages/RideTracking";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -36,6 +37,7 @@ const App = () => {
               <Route path="/" element={<Index />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/track/:token" element={<TrackingPublic />} />
+              <Route path="/ride/:rideId" element={<RideTracking />} />
               
               <Route path="/cliente" element={
                 <ProtectedRoute requireRole="customer">

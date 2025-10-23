@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { useDriverRoutes } from "@/hooks/useDriverRoutes";
 import { useNavigate } from "react-router-dom";
 import RouteMap from "@/components/RouteMap";
+import DriverTrackingControl from "@/components/DriverTrackingControl";
 
 const Motoboy = () => {
   const navigate = useNavigate();
@@ -92,6 +93,14 @@ const Motoboy = () => {
             Gerencie suas entregas e atualize o status em tempo real
           </p>
         </div>
+
+        {/* Tracking Control */}
+        {activeBatch && (
+          <DriverTrackingControl 
+            rideId={activeBatch.id} 
+            className="mb-6"
+          />
+        )}
 
         {!activeBatch ? (
           <Card className="p-8 text-center">
