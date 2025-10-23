@@ -5,6 +5,7 @@ import { getMapboxToken } from '@/lib/mapboxConfig';
 import { Card } from './ui/card';
 import { Badge } from './ui/badge';
 import { MapPin, Navigation, Package, Loader2 } from 'lucide-react';
+import MapStyleSelector from './MapStyleSelector';
 
 interface DeliveryMarker {
   id: string;
@@ -29,6 +30,7 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
   const [selectedDelivery, setSelectedDelivery] = useState<DeliveryMarker | null>(null);
   const [tokenReady, setTokenReady] = useState(false);
   const [tokenError, setTokenError] = useState(false);
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'satellite-streets'>('satellite-streets');
 
   // Buscar token do Mapbox
   useEffect(() => {
@@ -54,12 +56,19 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
   useEffect(() => {
     if (!mapContainer.current || map.current || !tokenReady) return;
 
+    const styleMap = {
+      'streets': 'mapbox://styles/mapbox/streets-v12',
+      'satellite': 'mapbox://styles/mapbox/satellite-v9',
+      'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-44.1900, -13.4100], // São Félix do Coribe - BA
+      style: styleMap[mapStyle],
+      center: [-44.1900, -13.4100],
       zoom: 13,
-      pitch: 45,
+      pitch: 0,
+      bearing: 0,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -214,7 +223,20 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
     return () => {
       map.current?.remove();
     };
-  }, [tokenReady]);
+  }, [tokenReady, mapStyle]);
+
+  // Atualizar estilo do mapa
+  useEffect(() => {
+    if (!map.current) return;
+
+    const styleMap = {
+      'streets': 'mapbox://styles/mapbox/streets-v12',
+      'satellite': 'mapbox://styles/mapbox/satellite-v9',
+      'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+
+    map.current.setStyle(styleMap[mapStyle]);
+  }, [mapStyle]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -289,6 +311,10 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
   return (
     <div className={className}>
       <div className="relative h-[600px] rounded-lg overflow-hidden border shadow-lg">
+        <MapStyleSelector 
+          onStyleChange={setMapStyle}
+          defaultStyle="satellite-streets"
+        />
         <div ref={mapContainer} className="absolute inset-0" />
 
         {selectedDelivery && (

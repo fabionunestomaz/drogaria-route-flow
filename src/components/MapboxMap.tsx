@@ -30,7 +30,7 @@ const MapboxMap = ({
   route,
   onMapClick,
   onMarkerDrag,
-  styleType = 'streets',
+  styleType = 'satellite-streets',
   className = 'w-full h-full'
 }: MapboxMapProps) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -76,6 +76,8 @@ const MapboxMap = ({
       style: styleMap[styleType],
       center,
       zoom,
+      pitch: 0, // Forçar visão 2D
+      bearing: 0,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');

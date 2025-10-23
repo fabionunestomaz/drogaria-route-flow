@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { getMapboxToken } from '@/lib/mapboxConfig';
 import { Card } from './ui/card';
 import { MapPin, Loader2 } from 'lucide-react';
+import MapStyleSelector from './MapStyleSelector';
 
 interface RouteMapProps {
   origin?: { lat: number; lng: number; label?: string };
@@ -34,6 +35,7 @@ const RouteMap = ({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [tokenReady, setTokenReady] = useState(false);
   const [tokenError, setTokenError] = useState(false);
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'satellite-streets'>('satellite-streets');
 
   // Buscar token do Mapbox
   useEffect(() => {
@@ -59,12 +61,19 @@ const RouteMap = ({
   useEffect(() => {
     if (!mapContainer.current || map.current || !tokenReady) return;
 
+    const styleMap = {
+      'streets': 'mapbox://styles/mapbox/streets-v12',
+      'satellite': 'mapbox://styles/mapbox/satellite-v9',
+      'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
+      style: styleMap[mapStyle],
       center: origin ? [origin.lng, origin.lat] : [-44.1900, -13.4100],
       zoom: 13,
-      pitch: 45,
+      pitch: 0,
+      bearing: 0,
     });
 
     map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
@@ -73,7 +82,20 @@ const RouteMap = ({
       map.current?.remove();
       map.current = null;
     };
-  }, [tokenReady, origin]);
+  }, [tokenReady, origin, mapStyle]);
+
+  // Atualizar estilo do mapa
+  useEffect(() => {
+    if (!map.current) return;
+
+    const styleMap = {
+      'streets': 'mapbox://styles/mapbox/streets-v12',
+      'satellite': 'mapbox://styles/mapbox/satellite-v9',
+      'satellite-streets': 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+
+    map.current.setStyle(styleMap[mapStyle]);
+  }, [mapStyle]);
 
   useEffect(() => {
     if (!map.current) return;
@@ -207,7 +229,15 @@ const RouteMap = ({
     );
   }
 
-  return <div ref={mapContainer} className={className} />;
+  return (
+    <div className="relative w-full h-full">
+      <MapStyleSelector 
+        onStyleChange={setMapStyle}
+        defaultStyle="satellite-streets"
+      />
+      <div ref={mapContainer} className={className} />
+    </div>
+  );
 };
 
 export default RouteMap;

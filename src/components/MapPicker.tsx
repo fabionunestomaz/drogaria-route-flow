@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import MapboxMap from './MapboxMap';
+import MapStyleSelector from './MapStyleSelector';
 import { Button } from '@/components/ui/button';
 import { reverseGeocode } from '@/lib/mapbox';
 import { MapPin } from 'lucide-react';
@@ -20,8 +21,22 @@ const MapPicker = ({
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'satellite-streets'>('satellite-streets');
 
   const handleMapClick = async (lng: number, lat: number) => {
+    setIsLoading(true);
+    setSelectedCoords([lng, lat]);
+    
+    const address = await reverseGeocode(lng, lat);
+    if (address) {
+      setSelectedAddress(address);
+    } else {
+      setSelectedAddress(`${lat.toFixed(6)}, ${lng.toFixed(6)}`);
+    }
+    setIsLoading(false);
+  };
+
+  const handleMarkerDrag = async (lng: number, lat: number) => {
     setIsLoading(true);
     setSelectedCoords([lng, lat]);
     
@@ -52,10 +67,15 @@ const MapPicker = ({
         <span>{label}</span>
       </div>
 
-      <div className="h-[400px] rounded-lg overflow-hidden border">
+      <div className="relative h-[400px] rounded-lg overflow-hidden border">
+        <MapStyleSelector 
+          onStyleChange={setMapStyle}
+          defaultStyle="satellite-streets"
+        />
         <MapboxMap
           center={selectedCoords || initialCenter}
           zoom={selectedCoords ? 15 : 12}
+          styleType={mapStyle}
           markers={[
             ...(fixedOrigin ? [{
               lng: initialCenter[0],
@@ -67,10 +87,12 @@ const MapPicker = ({
               lng: selectedCoords[0],
               lat: selectedCoords[1],
               color: '#ef4444',
-              label: 'Destino'
+              label: 'Destino (arraste para ajustar)',
+              draggable: true
             }] : [])
           ]}
           onMapClick={handleMapClick}
+          onMarkerDrag={handleMarkerDrag}
         />
       </div>
 

@@ -4,16 +4,22 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import AddressAutocomplete from '@/components/AddressAutocomplete';
+import MapboxMap from '@/components/MapboxMap';
+import MapStyleSelector from '@/components/MapStyleSelector';
+import { reverseGeocode } from '@/lib/mapbox';
 import Header from '@/components/Header';
 
 const Settings = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [mapStyle, setMapStyle] = useState<'streets' | 'satellite' | 'satellite-streets'>('satellite-streets');
   const [settings, setSettings] = useState({
     pharmacyName: '',
     address: '',
@@ -50,11 +56,24 @@ const Settings = () => {
     }
   };
 
+  const handleMarkerDrag = async (lng: number, lat: number) => {
+    const address = await reverseGeocode(lng, lat);
+    if (address) {
+      setSettings({
+        ...settings,
+        address,
+        lat,
+        lng
+      });
+      toast.info('📍 Localização atualizada! Verifique o endereço.');
+    }
+  };
+
   const handleSave = async () => {
     if (!user) return;
 
-    if (!settings.pharmacyName || !settings.address || !settings.lat || !settings.lng) {
-      toast.error('Preencha todos os campos obrigatórios');
+    if (!settings.pharmacyName || !settings.address || !settings.lat || !settings.lng || settings.lat === 0 || settings.lng === 0) {
+      toast.error('Preencha todos os campos obrigatórios e selecione uma localização válida');
       return;
     }
 
@@ -108,19 +127,72 @@ const Settings = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="address">Endereço da Farmácia *</Label>
-              <AddressAutocomplete
-                value={settings.address}
-                onChange={(address, coords) => {
-                  setSettings({
-                    ...settings,
-                    address,
-                    lat: coords?.lat || 0,
-                    lng: coords?.lng || 0
-                  });
-                }}
-                placeholder="Digite o endereço"
-              />
+              <Label>Endereço da Farmácia *</Label>
+              <Tabs defaultValue="address" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="address">📍 Buscar Endereço</TabsTrigger>
+                  <TabsTrigger value="map">🗺️ Ajustar no Mapa</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="address" className="space-y-2">
+                  <AddressAutocomplete
+                    value={settings.address}
+                    onChange={(address, coords) => {
+                      setSettings({
+                        ...settings,
+                        address,
+                        lat: coords?.lat || 0,
+                        lng: coords?.lng || 0
+                      });
+                    }}
+                    placeholder="Digite o endereço"
+                  />
+                </TabsContent>
+
+                <TabsContent value="map" className="space-y-2">
+                  <div className="relative h-[400px] rounded-lg overflow-hidden border">
+                    <MapStyleSelector 
+                      onStyleChange={setMapStyle}
+                      defaultStyle="satellite-streets"
+                    />
+                    {settings.lat !== 0 && settings.lng !== 0 && (
+                      <MapboxMap
+                        center={[settings.lng, settings.lat]}
+                        zoom={17}
+                        styleType={mapStyle}
+                        markers={[{
+                          lng: settings.lng,
+                          lat: settings.lat,
+                          color: '#22c55e',
+                          label: settings.pharmacyName || 'Farmácia',
+                          draggable: true
+                        }]}
+                        onMarkerDrag={handleMarkerDrag}
+                      />
+                    )}
+                    {(settings.lat === 0 || settings.lng === 0) && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-muted/50 backdrop-blur-sm">
+                        <Badge variant="outline" className="text-sm">
+                          Digite um endereço primeiro para ajustar no mapa
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  <Badge className="w-full justify-center" variant="secondary">
+                    🎯 Arraste o marcador verde para ajustar a localização exata
+                  </Badge>
+                </TabsContent>
+              </Tabs>
+
+              {settings.address && (
+                <Card className="bg-muted/50 p-3 mt-2">
+                  <p className="text-xs text-muted-foreground">Localização Atual:</p>
+                  <p className="text-sm font-medium">{settings.address}</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    📍 {settings.lat.toFixed(6)}, {settings.lng.toFixed(6)}
+                  </p>
+                </Card>
+              )}
             </div>
 
             <div className="space-y-2">
