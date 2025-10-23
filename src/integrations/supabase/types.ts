@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action: string
+          created_at: string
+          entity: string
+          entity_id: string | null
+          id: string
+          metadata: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          entity: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          entity?: string
+          entity_id?: string | null
+          id?: string
+          metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      coupons: {
+        Row: {
+          active: boolean | null
+          code: string
+          created_at: string
+          type: string
+          valid_until: string | null
+          value: number
+        }
+        Insert: {
+          active?: boolean | null
+          code: string
+          created_at?: string
+          type: string
+          valid_until?: string | null
+          value: number
+        }
+        Update: {
+          active?: boolean | null
+          code?: string
+          created_at?: string
+          type?: string
+          valid_until?: string | null
+          value?: number
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string
@@ -275,6 +332,41 @@ export type Database = {
         }
         Relationships: []
       }
+      messages: {
+        Row: {
+          content: string
+          from_user_id: string
+          id: string
+          ride_id: string
+          sent_at: string
+          to_user_id: string
+        }
+        Insert: {
+          content: string
+          from_user_id: string
+          id?: string
+          ride_id: string
+          sent_at?: string
+          to_user_id: string
+        }
+        Update: {
+          content?: string
+          from_user_id?: string
+          id?: string
+          ride_id?: string
+          sent_at?: string
+          to_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       pharmacy_settings: {
         Row: {
           address: string
@@ -353,6 +445,79 @@ export type Database = {
         }
         Relationships: []
       }
+      ratings: {
+        Row: {
+          comment: string | null
+          created_at: string
+          customer_id: string
+          driver_id: string | null
+          id: string
+          ride_id: string
+          stars: number
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          driver_id?: string | null
+          id?: string
+          ride_id: string
+          stars: number
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          driver_id?: string | null
+          id?: string
+          ride_id?: string
+          stars?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ratings_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ride_cancellations: {
+        Row: {
+          canceled_by: string
+          created_at: string
+          fee_value: number | null
+          id: string
+          reason: string | null
+          ride_id: string
+        }
+        Insert: {
+          canceled_by: string
+          created_at?: string
+          fee_value?: number | null
+          id?: string
+          reason?: string | null
+          ride_id: string
+        }
+        Update: {
+          canceled_by?: string
+          created_at?: string
+          fee_value?: number | null
+          id?: string
+          reason?: string | null
+          ride_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ride_cancellations_ride_id_fkey"
+            columns: ["ride_id"]
+            isOneToOne: false
+            referencedRelation: "rides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ride_locations: {
         Row: {
           accuracy: number | null
@@ -400,19 +565,32 @@ export type Database = {
       rides: {
         Row: {
           cancelable_until: string | null
+          canceled_reason: string | null
+          completed_at: string | null
           coupon_code: string | null
           created_at: string
           customer_id: string | null
+          delivered_at: string | null
           dest_address: string
           dest_lat: number | null
           dest_lng: number | null
+          distance_km_est: number | null
           driver_id: string | null
+          duration_min_est: number | null
+          eta_seconds_current: number | null
           id: string
+          last_eta_recalc_at: string | null
           origin_address: string
           origin_lat: number | null
           origin_lng: number | null
+          price_auto_base: number | null
+          price_auto_per_km: number | null
+          price_auto_per_min: number | null
           price_final: number | null
+          price_manual: number | null
+          price_min: number | null
           price_mode: string | null
+          started_at: string | null
           status: string
           tracking_enabled: boolean
           tracking_expires_at: string | null
@@ -421,19 +599,32 @@ export type Database = {
         }
         Insert: {
           cancelable_until?: string | null
+          canceled_reason?: string | null
+          completed_at?: string | null
           coupon_code?: string | null
           created_at?: string
           customer_id?: string | null
+          delivered_at?: string | null
           dest_address: string
           dest_lat?: number | null
           dest_lng?: number | null
+          distance_km_est?: number | null
           driver_id?: string | null
+          duration_min_est?: number | null
+          eta_seconds_current?: number | null
           id?: string
+          last_eta_recalc_at?: string | null
           origin_address: string
           origin_lat?: number | null
           origin_lng?: number | null
+          price_auto_base?: number | null
+          price_auto_per_km?: number | null
+          price_auto_per_min?: number | null
           price_final?: number | null
+          price_manual?: number | null
+          price_min?: number | null
           price_mode?: string | null
+          started_at?: string | null
           status?: string
           tracking_enabled?: boolean
           tracking_expires_at?: string | null
@@ -442,19 +633,32 @@ export type Database = {
         }
         Update: {
           cancelable_until?: string | null
+          canceled_reason?: string | null
+          completed_at?: string | null
           coupon_code?: string | null
           created_at?: string
           customer_id?: string | null
+          delivered_at?: string | null
           dest_address?: string
           dest_lat?: number | null
           dest_lng?: number | null
+          distance_km_est?: number | null
           driver_id?: string | null
+          duration_min_est?: number | null
+          eta_seconds_current?: number | null
           id?: string
+          last_eta_recalc_at?: string | null
           origin_address?: string
           origin_lat?: number | null
           origin_lng?: number | null
+          price_auto_base?: number | null
+          price_auto_per_km?: number | null
+          price_auto_per_min?: number | null
           price_final?: number | null
+          price_manual?: number | null
+          price_min?: number | null
           price_mode?: string | null
+          started_at?: string | null
           status?: string
           tracking_enabled?: boolean
           tracking_expires_at?: string | null
@@ -499,6 +703,16 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "driver" | "customer"
+      ride_status_enum:
+        | "created"
+        | "offered"
+        | "accepted"
+        | "enroute_pickup"
+        | "picked"
+        | "enroute_dropoff"
+        | "delivered"
+        | "completed"
+        | "canceled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -627,6 +841,17 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "driver", "customer"],
+      ride_status_enum: [
+        "created",
+        "offered",
+        "accepted",
+        "enroute_pickup",
+        "picked",
+        "enroute_dropoff",
+        "delivered",
+        "completed",
+        "canceled",
+      ],
     },
   },
 } as const

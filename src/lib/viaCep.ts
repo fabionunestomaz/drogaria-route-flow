@@ -12,6 +12,8 @@ export interface ViaCepResponse {
   erro?: boolean;
 }
 
+const VIACEP_BASE = 'https://viacep.com.br/ws';
+
 export const searchCep = async (cep: string): Promise<ViaCepResponse | null> => {
   try {
     const cleanCep = cep.replace(/\D/g, '');
@@ -20,7 +22,12 @@ export const searchCep = async (cep: string): Promise<ViaCepResponse | null> => 
       throw new Error('CEP deve ter 8 dígitos');
     }
 
-    const response = await fetch(`https://viacep.com.br/ws/${cleanCep}/json/`);
+    const response = await fetch(`${VIACEP_BASE}/${cleanCep}/json/`);
+    
+    if (!response.ok) {
+      throw new Error('Erro ao buscar CEP');
+    }
+
     const data = await response.json();
 
     if (data.erro) {
@@ -43,4 +50,12 @@ export const formatAddress = (data: ViaCepResponse): string => {
   ].filter(Boolean);
   
   return parts.join(', ');
+};
+
+export const formatCepMask = (value: string): string => {
+  const cleaned = value.replace(/\D/g, '');
+  if (cleaned.length <= 5) {
+    return cleaned;
+  }
+  return `${cleaned.slice(0, 5)}-${cleaned.slice(5, 8)}`;
 };
