@@ -1,35 +1,44 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Search, Navigation, Package, XCircle, Loader2 } from "lucide-react";
+import { MapPin, Package, XCircle, Loader2, Navigation } from "lucide-react";
 import { toast } from "sonner";
 import ShareTrackingButton from "@/components/ShareTrackingButton";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import MapPicker from "@/components/MapPicker";
-import { searchCep, formatAddress } from "@/lib/viaCep";
-import { calculateDistance, geocodeAddress } from "@/lib/mapbox";
+import { searchCep, formatAddress, formatCepMask } from "@/lib/viaCep";
+import { geocodeAddress } from "@/lib/mapbox";
 import { calculateRoute as calculateMapboxRoute } from "@/lib/mapboxDirections";
 import { useDeliveryRequests } from "@/hooks/useDeliveryRequests";
+import { usePharmacySettings } from "@/hooks/usePharmacySettings";
 import MapboxMap from "@/components/MapboxMap";
 
 const Cliente = () => {
   const { requests, loading: loadingRequests, createRequest, cancelRequest } = useDeliveryRequests();
+  const { settings: pharmacySettings, loading: loadingSettings } = usePharmacySettings();
+  
   const [origin, setOrigin] = useState("");
   const [destination, setDestination] = useState("");
   const [originCoords, setOriginCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destCoords, setDestCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [lastTrackingToken, setLastTrackingToken] = useState<string | null>(null);
-  const [cepOrigin, setCepOrigin] = useState("");
-  const [cepDest, setCepDest] = useState("");
   const [distance, setDistance] = useState<number | null>(null);
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
+  const [isSearchingCep, setIsSearchingCep] = useState(false);
+
+  // Fixar origem automaticamente com as configurações da farmácia
+  useEffect(() => {
+    if (pharmacySettings) {
+      setOrigin(pharmacySettings.address);
+      setOriginCoords({ lat: pharmacySettings.lat, lng: pharmacySettings.lng });
+    }
+  }, [pharmacySettings]);
 
   const calculateRoute = async () => {
     if (originCoords && destCoords) {
@@ -41,37 +50,45 @@ const Cliente = () => {
         const route = routeData.routes[0];
         const dist = route.distance / 1000;
         const time = Math.round(route.duration / 60);
+        const basePrice = pharmacySettings?.base_price || 5;
+        const pricePerKm = pharmacySettings?.price_per_km || 2;
         setDistance(dist);
         setEstimatedTime(time);
-        setPrice(Math.max(10, dist * 3));
+        setPrice(basePrice + (dist * pricePerKm));
         setRouteCoordinates(route.geometry.coordinates);
-      } else {
-        const dist = calculateDistance(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng);
-        setDistance(dist);
-        setEstimatedTime(Math.round(dist / 30 * 60));
-        setPrice(Math.max(10, dist * 3));
-        setRouteCoordinates(null);
       }
     }
   };
 
-  const handleCepSearch = async (cep: string, type: 'origin' | 'dest') => {
-    const data = await searchCep(cep);
-    if (data) {
-      const address = formatAddress(data);
-      const result = await geocodeAddress(address);
-      if (result) {
-        if (type === 'origin') {
-          setOrigin(address);
-          setOriginCoords({ lat: result.center[1], lng: result.center[0] });
-        } else {
+  // Detectar e processar CEP ou endereço automaticamente
+  const handleDestinationInput = async (input: string, coords?: { lat: number; lng: number }) => {
+    // Se coords já foi passado (do autocomplete), usar diretamente
+    if (coords) {
+      setDestination(input);
+      setDestCoords(coords);
+      if (originCoords) calculateRoute();
+      return;
+    }
+
+    const cleaned = input.replace(/\D/g, '');
+    
+    // Detectar se é CEP (8 dígitos)
+    if (cleaned.length === 8) {
+      setIsSearchingCep(true);
+      const data = await searchCep(cleaned);
+      if (data) {
+        const address = formatAddress(data);
+        const result = await geocodeAddress(address);
+        if (result) {
           setDestination(address);
           setDestCoords({ lat: result.center[1], lng: result.center[0] });
+          if (originCoords) calculateRoute();
+          toast.success("CEP encontrado!");
         }
-        toast.success("CEP encontrado!");
+      } else {
+        toast.error("CEP não encontrado");
       }
-    } else {
-      toast.error("CEP não encontrado");
+      setIsSearchingCep(false);
     }
   };
 
@@ -99,16 +116,13 @@ const Cliente = () => {
 
       if (request) {
         setLastTrackingToken(request.tracking_token);
-        // Reset form
-        setOrigin("");
+        // Reset form (mantém origem fixa)
         setDestination("");
-        setOriginCoords(null);
         setDestCoords(null);
         setDistance(null);
         setEstimatedTime(null);
         setPrice(null);
-        setCepOrigin("");
-        setCepDest("");
+        setRouteCoordinates(null);
       }
     } finally {
       setIsSubmitting(false);
@@ -121,20 +135,39 @@ const Cliente = () => {
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-2">Nova Entrega</h1>
           <p className="text-muted-foreground">
-            Preencha os dados da sua entrega e acompanhe em tempo real
+            Preencha o destino da sua entrega e acompanhe em tempo real
           </p>
         </div>
 
+        {/* Card de Origem Fixa */}
+        {loadingSettings ? (
+          <Card className="p-4 mb-6">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              <span className="text-muted-foreground">Carregando configurações...</span>
+            </div>
+          </Card>
+        ) : pharmacySettings ? (
+          <Card className="p-4 bg-primary/10 border-primary/20 mb-6">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                <MapPin className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs text-muted-foreground">Origem da Entrega (Fixo)</p>
+                <p className="font-semibold truncate">{pharmacySettings.pharmacy_name}</p>
+                <p className="text-sm text-muted-foreground">{pharmacySettings.address}</p>
+              </div>
+            </div>
+          </Card>
+        ) : null}
+
         <Card className="p-6 shadow-elevated">
-          <Tabs defaultValue="search" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="search" className="touch-target">
-                <Search className="h-4 w-4 mr-2" />
-                Busca
-              </TabsTrigger>
-              <TabsTrigger value="cep" className="touch-target">
+          <Tabs defaultValue="address" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="address" className="touch-target">
                 <MapPin className="h-4 w-4 mr-2" />
-                CEP
+                Endereço/CEP
               </TabsTrigger>
               <TabsTrigger value="map" className="touch-target">
                 <Navigation className="h-4 w-4 mr-2" />
@@ -143,121 +176,92 @@ const Cliente = () => {
             </TabsList>
 
             <form onSubmit={handleSubmit} className="mt-6">
-              <TabsContent value="search" className="space-y-4">
+              <TabsContent value="address" className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="origin">Endereço de Coleta</Label>
-                  <AddressAutocomplete
-                    value={origin}
-                    onChange={(address, coords) => {
-                      setOrigin(address);
-                      if (coords) {
-                        setOriginCoords(coords);
-                        if (destCoords) calculateRoute();
-                      }
-                    }}
-                    placeholder="Digite o endereço de coleta..."
-                    className="touch-target"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ex: Av. Luís Eduardo Magalhães, São Félix do Coribe - BA
-                  </p>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="destination">Endereço de Entrega</Label>
+                  <Label htmlFor="destination">Endereço ou CEP de Entrega</Label>
                   <AddressAutocomplete
                     value={destination}
                     onChange={(address, coords) => {
-                      setDestination(address);
-                      if (coords) {
-                        setDestCoords(coords);
-                        if (originCoords) calculateRoute();
-                      }
+                      handleDestinationInput(address, coords);
                     }}
-                    placeholder="Digite o endereço de entrega..."
+                    placeholder="Digite o endereço ou CEP (ex: 47670-025)"
                     className="touch-target"
                   />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="cep" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="cep-origin">CEP de Coleta</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="cep-origin"
-                      placeholder="00000-000"
-                      maxLength={9}
-                      value={cepOrigin}
-                      onChange={(e) => setCepOrigin(e.target.value)}
-                      className="touch-target flex-1"
-                    />
-                    <Button 
-                      type="button"
-                      onClick={() => handleCepSearch(cepOrigin, 'origin')}
-                      disabled={cepOrigin.replace(/\D/g, '').length !== 8}
-                    >
-                      Buscar
-                    </Button>
-                  </div>
-                  {origin && <p className="text-xs text-muted-foreground mt-1">{origin}</p>}
+                  {isSearchingCep && (
+                    <Badge variant="secondary" className="mt-1">
+                      <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                      CEP detectado - Buscando endereço...
+                    </Badge>
+                  )}
+                  <p className="text-xs text-muted-foreground">
+                    Digite o endereço completo ou apenas o CEP para buscar automaticamente
+                  </p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="cep-dest">CEP de Entrega</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="cep-dest"
-                      placeholder="00000-000"
-                      maxLength={9}
-                      value={cepDest}
-                      onChange={(e) => setCepDest(e.target.value)}
-                      className="touch-target flex-1"
-                    />
+                {distance && estimatedTime && price && (
+                  <div className="space-y-4 mt-6">
+                    {routeCoordinates && originCoords && destCoords && (
+                      <div className="h-[300px] rounded-lg overflow-hidden border">
+                        <MapboxMap
+                          center={[originCoords.lng, originCoords.lat]}
+                          zoom={12}
+                          markers={[
+                            { lng: originCoords.lng, lat: originCoords.lat, color: '#22c55e', label: 'Origem' },
+                            { lng: destCoords.lng, lat: destCoords.lat, color: '#ef4444', label: 'Destino' }
+                          ]}
+                          route={routeCoordinates}
+                        />
+                      </div>
+                    )}
+
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Distância estimada:</span>
+                        <span className="text-muted-foreground">{distance.toFixed(1)} km</span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Tempo estimado:</span>
+                        <span className="text-muted-foreground">{estimatedTime} min</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-lg">Valor:</span>
+                        <span className="text-2xl font-bold text-primary">R$ {price.toFixed(2)}</span>
+                      </div>
+                    </div>
+
                     <Button 
-                      type="button"
-                      onClick={() => handleCepSearch(cepDest, 'dest')}
-                      disabled={cepDest.replace(/\D/g, '').length !== 8}
+                      type="submit" 
+                      className="w-full touch-target shadow-glow" 
+                      size="lg"
+                      disabled={!originCoords || !destCoords || isSubmitting}
                     >
-                      Buscar
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        'Solicitar Entrega'
+                      )}
                     </Button>
                   </div>
-                  {destination && <p className="text-xs text-muted-foreground mt-1">{destination}</p>}
-                </div>
+                )}
               </TabsContent>
 
               <TabsContent value="map" className="space-y-4">
-                {!originCoords ? (
+                {!destCoords && originCoords ? (
                   <MapPicker
-                    label="Clique no mapa para selecionar a origem"
-                    onSelect={(address, coords) => {
-                      console.log('✅ Cliente - Origem selecionada:', {
-                        address,
-                        coordsRecebidas: coords,
-                        coordsSalvas: { lat: coords[1], lng: coords[0] }
-                      });
-                      setOrigin(address);
-                      setOriginCoords({ lat: coords[1], lng: coords[0] });
-                      toast.success("Origem selecionada!");
-                    }}
-                  />
-                ) : !destCoords ? (
-                  <MapPicker
-                    label="Clique no mapa para selecionar o destino"
+                    label="Clique no mapa para selecionar o local de entrega"
+                    fixedOrigin={originCoords ? { lat: originCoords.lat, lng: originCoords.lng, label: pharmacySettings?.pharmacy_name || 'Origem' } : undefined}
                     initialCenter={[originCoords.lng, originCoords.lat]}
                     onSelect={(address, coords) => {
-                      console.log('✅ Cliente - Destino selecionado:', {
-                        address,
-                        coordsRecebidas: coords,
-                        coordsSalvas: { lat: coords[1], lng: coords[0] }
-                      });
                       setDestination(address);
                       setDestCoords({ lat: coords[1], lng: coords[0] });
                       calculateRoute();
-                      toast.success("Destino selecionado!");
+                      toast.success("Destino selecionado e rota calculada!");
                     }}
                   />
-                ) : (
+                ) : destCoords && originCoords ? (
                   <div className="space-y-4">
                     {routeCoordinates && (
                       <div className="h-[400px] rounded-lg overflow-hidden border">
@@ -274,20 +278,22 @@ const Cliente = () => {
                     )}
                     
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">✅ Origem: {origin}</p>
-                      <p className="text-sm font-medium">✅ Destino: {destination}</p>
+                      <p className="text-sm"><span className="font-medium">Origem:</span> {origin}</p>
+                      <p className="text-sm"><span className="font-medium">Destino:</span> {destination}</p>
                       <Button 
                         type="button"
                         variant="outline" 
                         onClick={() => {
-                          setOriginCoords(null);
                           setDestCoords(null);
-                          setOrigin("");
                           setDestination("");
                           setRouteCoordinates(null);
+                          setDistance(null);
+                          setEstimatedTime(null);
+                          setPrice(null);
                         }}
+                        className="w-full"
                       >
-                        Selecionar Novamente
+                        Selecionar Outro Destino
                       </Button>
                     </div>
 
@@ -322,9 +328,13 @@ const Cliente = () => {
                       )}
                     </Button>
                   </div>
+                ) : (
+                  <div className="p-8 text-center text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+                    Carregando mapa...
+                  </div>
                 )}
               </TabsContent>
-
             </form>
           </Tabs>
         </Card>

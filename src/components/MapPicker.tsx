@@ -8,12 +8,14 @@ interface MapPickerProps {
   onSelect: (address: string, coordinates: [number, number]) => void;
   initialCenter?: [number, number];
   label?: string;
+  fixedOrigin?: { lat: number; lng: number; label: string };
 }
 
 const MapPicker = ({ 
   onSelect, 
   initialCenter = [-44.1900, -13.4100],
-  label = 'Clique no mapa para selecionar o local'
+  label = 'Clique no mapa para selecionar o local',
+  fixedOrigin
 }: MapPickerProps) => {
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);
   const [selectedAddress, setSelectedAddress] = useState<string>('');
@@ -54,12 +56,20 @@ const MapPicker = ({
         <MapboxMap
           center={selectedCoords || initialCenter}
           zoom={selectedCoords ? 15 : 12}
-          markers={selectedCoords ? [{
-            lng: selectedCoords[0],
-            lat: selectedCoords[1],
-            color: '#3b82f6',
-            label: 'Local selecionado'
-          }] : []}
+          markers={[
+            ...(fixedOrigin ? [{
+              lng: initialCenter[0],
+              lat: initialCenter[1],
+              color: '#22c55e',
+              label: fixedOrigin.label
+            }] : []),
+            ...(selectedCoords ? [{
+              lng: selectedCoords[0],
+              lat: selectedCoords[1],
+              color: '#ef4444',
+              label: 'Destino'
+            }] : [])
+          ]}
           onMapClick={handleMapClick}
         />
       </div>
