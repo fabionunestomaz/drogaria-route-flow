@@ -259,9 +259,23 @@ const Cliente = () => {
                   />
                 ) : (
                   <div className="space-y-4">
+                    {routeCoordinates && (
+                      <div className="h-[400px] rounded-lg overflow-hidden border">
+                        <MapboxMap
+                          center={[originCoords.lng, originCoords.lat]}
+                          zoom={13}
+                          markers={[
+                            { lng: originCoords.lng, lat: originCoords.lat, color: '#22c55e', label: 'Origem' },
+                            { lng: destCoords.lng, lat: destCoords.lat, color: '#ef4444', label: 'Destino' }
+                          ]}
+                          route={routeCoordinates}
+                        />
+                      </div>
+                    )}
+                    
                     <div className="space-y-2">
-                      <p className="text-sm font-medium">Origem: {origin}</p>
-                      <p className="text-sm font-medium">Destino: {destination}</p>
+                      <p className="text-sm font-medium">✅ Origem: {origin}</p>
+                      <p className="text-sm font-medium">✅ Destino: {destination}</p>
                       <Button 
                         type="button"
                         variant="outline" 
@@ -270,102 +284,47 @@ const Cliente = () => {
                           setDestCoords(null);
                           setOrigin("");
                           setDestination("");
+                          setRouteCoordinates(null);
                         }}
                       >
                         Selecionar Novamente
                       </Button>
                     </div>
 
-                    {/* Resumo da rota na aba Mapa */}
                     <div className="p-4 bg-muted/50 rounded-lg">
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">Distância estimada:</span>
-                        <span className="text-muted-foreground">
-                          {distance ? `${distance.toFixed(1)} km` : '--'}
-                        </span>
+                        <span className="text-muted-foreground">{distance ? `${distance.toFixed(1)} km` : '--'}</span>
                       </div>
                       <div className="flex justify-between items-center mb-2">
                         <span className="font-medium">Tempo estimado:</span>
-                        <span className="text-muted-foreground">
-                          {estimatedTime ? `${estimatedTime} min` : '--'}
-                        </span>
+                        <span className="text-muted-foreground">{estimatedTime ? `${estimatedTime} min` : '--'}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="font-medium text-lg">Valor:</span>
-                        <span className="text-2xl font-bold text-primary">
-                          {price ? `R$ ${price.toFixed(2)}` : 'R$ --'}
-                        </span>
+                        <span className="text-2xl font-bold text-primary">{price ? `R$ ${price.toFixed(2)}` : 'R$ --'}</span>
                       </div>
                     </div>
 
-                    <div className="flex gap-2">
-                      <Button 
-                        type="submit" 
-                        className="flex-1 touch-target shadow-glow" 
-                        size="lg"
-                        disabled={!originCoords || !destCoords || isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            Enviando...
-                          </>
-                        ) : (
-                          'Solicitar Entrega'
-                        )}
-                      </Button>
-                      {lastTrackingToken && (
-                        <ShareTrackingButton trackingToken={lastTrackingToken} />
+                    <Button 
+                      type="submit" 
+                      className="w-full touch-target shadow-glow" 
+                      size="lg"
+                      disabled={!originCoords || !destCoords || isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando...
+                        </>
+                      ) : (
+                        'Solicitar Entrega'
                       )}
-                    </div>
+                    </Button>
                   </div>
                 )}
               </TabsContent>
 
-              {/* Resumo da rota nas outras abas */}
-              <div className="mt-6 space-y-4">
-                <div className="p-4 bg-muted/50 rounded-lg">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Distância estimada:</span>
-                    <span className="text-muted-foreground">
-                      {distance ? `${distance.toFixed(1)} km` : '--'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="font-medium">Tempo estimado:</span>
-                    <span className="text-muted-foreground">
-                      {estimatedTime ? `${estimatedTime} min` : '--'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="font-medium text-lg">Valor:</span>
-                    <span className="text-2xl font-bold text-primary">
-                      {price ? `R$ ${price.toFixed(2)}` : 'R$ --'}
-                    </span>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <Button 
-                    type="submit" 
-                    className="flex-1 touch-target shadow-glow" 
-                    size="lg"
-                    disabled={!originCoords || !destCoords || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      'Solicitar Entrega'
-                    )}
-                  </Button>
-                  {lastTrackingToken && (
-                    <ShareTrackingButton trackingToken={lastTrackingToken} />
-                  )}
-                </div>
-              </div>
             </form>
           </Tabs>
         </Card>
