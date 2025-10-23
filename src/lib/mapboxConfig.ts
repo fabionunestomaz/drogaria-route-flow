@@ -36,7 +36,9 @@ export const getMapboxToken = async (): Promise<string> => {
 
 // Token síncrono para uso inicial (pode estar vazio até a primeira chamada assíncrona)
 export const MAPBOX_PUBLIC_TOKEN =
-  import.meta.env.VITE_MAPBOX_TOKEN && import.meta.env.VITE_MAPBOX_TOKEN !== "COLE_SEU_TOKEN_MAPBOX_AQUI"
+  import.meta.env.VITE_MAPBOX_TOKEN &&
+  import.meta.env.VITE_MAPBOX_TOKEN !==
+    "pk.eyJ1IjoiZmFiaW9udW5lc3RvbWF6IiwiYSI6ImNtaDJmNmtyNzJ3aDQya29udW13ZHRwN2oifQ.OAA-q96QLQd8D6hI9eocAg"
     ? import.meta.env.VITE_MAPBOX_TOKEN
     : "";
 
