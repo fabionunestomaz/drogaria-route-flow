@@ -251,6 +251,42 @@ export type Database = {
           },
         ]
       }
+      delivery_batch_locations: {
+        Row: {
+          accuracy: number | null
+          batch_id: string
+          driver_id: string | null
+          heading: number | null
+          id: string
+          lat: number
+          lng: number
+          recorded_at: string
+          speed: number | null
+        }
+        Insert: {
+          accuracy?: number | null
+          batch_id: string
+          driver_id?: string | null
+          heading?: number | null
+          id?: string
+          lat: number
+          lng: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Update: {
+          accuracy?: number | null
+          batch_id?: string
+          driver_id?: string | null
+          heading?: number | null
+          id?: string
+          lat?: number
+          lng?: number
+          recorded_at?: string
+          speed?: number | null
+        }
+        Relationships: []
+      }
       delivery_batches: {
         Row: {
           created_at: string

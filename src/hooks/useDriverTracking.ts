@@ -14,11 +14,11 @@ interface LocationData {
 }
 
 interface UseDriverTrackingProps {
-  rideId: string;
+  batchId: string;
   enabled: boolean;
 }
 
-export const useDriverTracking = ({ rideId, enabled }: UseDriverTrackingProps) => {
+export const useDriverTracking = ({ batchId, enabled }: UseDriverTrackingProps) => {
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -26,7 +26,7 @@ export const useDriverTracking = ({ rideId, enabled }: UseDriverTrackingProps) =
   const pingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    if (!enabled || !rideId) {
+    if (!enabled || !batchId) {
       return;
     }
 
@@ -65,8 +65,8 @@ export const useDriverTracking = ({ rideId, enabled }: UseDriverTrackingProps) =
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        await supabase.from('ride_locations').insert({
-          ride_id: rideId,
+        await supabase.from('delivery_batch_locations').insert({
+          batch_id: batchId,
           driver_id: user.id,
           lat: location.lat,
           lng: location.lng,
@@ -128,7 +128,7 @@ export const useDriverTracking = ({ rideId, enabled }: UseDriverTrackingProps) =
           throw new Error('Not authenticated');
         }
 
-        ws = new WebSocket(`${WS_URL}?ride_id=${rideId}&role=driver`);
+        ws = new WebSocket(`${WS_URL}?batch_id=${batchId}&role=driver`);
         wsRef.current = ws;
 
         ws.onopen = () => {
@@ -176,7 +176,7 @@ export const useDriverTracking = ({ rideId, enabled }: UseDriverTrackingProps) =
     connectWebSocket();
 
     return cleanup;
-  }, [rideId, enabled]);
+  }, [batchId, enabled]);
 
   return { connected, error };
 };

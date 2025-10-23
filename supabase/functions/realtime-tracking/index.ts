@@ -15,28 +15,32 @@ serve(async (req) => {
   }
 
   const url = new URL(req.url);
-  const rideId = url.searchParams.get("ride_id");
+  const ride_id = url.searchParams.get("ride_id");
+  const batch_id = url.searchParams.get("batch_id");
   const role = url.searchParams.get("role"); // 'driver' or 'customer'
 
-  if (!rideId) {
-    return new Response("Missing ride_id parameter", { status: 400 });
+  // Accept either ride_id or batch_id
+  const trackingId = batch_id || ride_id;
+
+  if (!trackingId) {
+    return new Response("Missing ride_id or batch_id parameter", { status: 400 });
   }
 
   const { socket, response } = Deno.upgradeWebSocket(req);
 
   socket.onopen = () => {
-    console.log(`[${rideId}] ${role} connected`);
+    console.log(`[${trackingId}] ${role} connected`);
 
     // Initialize room if it doesn't exist
-    if (!rooms.has(rideId)) {
-      rooms.set(rideId, new Set());
+    if (!rooms.has(trackingId)) {
+      rooms.set(trackingId, new Set());
     }
 
-    const room = rooms.get(rideId)!;
+    const room = rooms.get(trackingId)!;
 
     // Limit clients per room
     if (room.size >= MAX_CLIENTS_PER_RIDE) {
-      console.warn(`[${rideId}] Max clients reached`);
+      console.warn(`[${trackingId}] Max clients reached`);
       socket.close(1008, "Room full");
       return;
     }
@@ -46,17 +50,19 @@ serve(async (req) => {
     // Send welcome message
     socket.send(JSON.stringify({
       type: 'connected',
-      ride_id: rideId,
+      tracking_id: trackingId,
+      ride_id,
+      batch_id,
       timestamp: Date.now()
     }));
 
-    console.log(`[${rideId}] Total clients: ${room.size}`);
+    console.log(`[${trackingId}] Total clients: ${room.size}`);
   };
 
   socket.onmessage = (event) => {
     try {
       const data = JSON.parse(event.data);
-      console.log(`[${rideId}] Message from ${role}:`, data.type);
+      console.log(`[${trackingId}] Message from ${role}:`, data.type);
 
       if (data.type === 'location_update' && role === 'driver') {
         // Validate location data
@@ -71,7 +77,7 @@ serve(async (req) => {
         }
 
         // Broadcast to all clients in the room
-        const room = rooms.get(rideId);
+        const room = rooms.get(trackingId);
         if (room) {
           const broadcastData = JSON.stringify({
             type: 'driver_location',
@@ -91,7 +97,7 @@ serve(async (req) => {
             }
           });
 
-          console.log(`[${rideId}] Broadcasted to ${broadcastCount} clients`);
+          console.log(`[${trackingId}] Broadcasted to ${broadcastCount} clients`);
 
           // Acknowledge to driver
           socket.send(JSON.stringify({
@@ -107,7 +113,7 @@ serve(async (req) => {
         }));
       } else if (data.type === 'eta_request' && role === 'customer') {
         // Client requesting ETA recalculation
-        const room = rooms.get(rideId);
+        const room = rooms.get(trackingId);
         if (room) {
           room.forEach((client) => {
             if (client !== socket && client.readyState === WebSocket.OPEN) {
@@ -120,7 +126,7 @@ serve(async (req) => {
         }
       }
     } catch (error) {
-      console.error(`[${rideId}] Error processing message:`, error);
+      console.error(`[${trackingId}] Error processing message:`, error);
       socket.send(JSON.stringify({
         type: 'error',
         message: 'Failed to process message'
@@ -129,21 +135,21 @@ serve(async (req) => {
   };
 
   socket.onerror = (error) => {
-    console.error(`[${rideId}] WebSocket error:`, error);
+    console.error(`[${trackingId}] WebSocket error:`, error);
   };
 
   socket.onclose = () => {
-    console.log(`[${rideId}] ${role} disconnected`);
+    console.log(`[${trackingId}] ${role} disconnected`);
 
-    const room = rooms.get(rideId);
+    const room = rooms.get(trackingId);
     if (room) {
       room.delete(socket);
-      console.log(`[${rideId}] Remaining clients: ${room.size}`);
+      console.log(`[${trackingId}] Remaining clients: ${room.size}`);
 
       // Cleanup empty rooms
       if (room.size === 0) {
-        rooms.delete(rideId);
-        console.log(`[${rideId}] Room closed`);
+        rooms.delete(trackingId);
+        console.log(`[${trackingId}] Room closed`);
       } else {
         // Notify remaining clients
         room.forEach((client) => {

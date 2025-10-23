@@ -95,12 +95,12 @@ const Motoboy = () => {
         </div>
 
         {/* Tracking Control */}
-        {activeBatch && (
-          <DriverTrackingControl 
-            rideId={activeBatch.id} 
-            className="mb-6"
-          />
-        )}
+      {activeBatch && (
+        <DriverTrackingControl 
+          batchId={activeBatch.id}
+          className="mb-6"
+        />
+      )}
 
         {!activeBatch ? (
           <Card className="p-8 text-center">

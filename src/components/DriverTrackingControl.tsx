@@ -7,14 +7,14 @@ import { useDriverTracking } from '@/hooks/useDriverTracking';
 import { Alert, AlertDescription } from './ui/alert';
 
 interface DriverTrackingControlProps {
-  rideId: string;
+  batchId: string;
   className?: string;
 }
 
-const DriverTrackingControl = ({ rideId, className }: DriverTrackingControlProps) => {
+const DriverTrackingControl = ({ batchId, className }: DriverTrackingControlProps) => {
   const [trackingEnabled, setTrackingEnabled] = useState(false);
   const { connected, error } = useDriverTracking({
-    rideId,
+    batchId,
     enabled: trackingEnabled
   });
 
