@@ -21,6 +21,7 @@ import { useDrivers } from "@/hooks/useDrivers";
 import { useAdminDeliveryRequests } from "@/hooks/useAdminDeliveryRequests";
 import { useDriverApprovals } from "@/hooks/useDriverApprovals";
 import RouteMap from "@/components/RouteMap";
+import ClusteredMap from "@/components/ClusteredMap";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,6 +40,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useNavigate } from "react-router-dom";
+import SeedDataButton from "@/components/SeedDataButton";
 
 const Admin = () => {
   const { batches, kpis, loading, deleteBatch, updateBatchStatus, reassignDriver } = useAdminData();
@@ -134,10 +136,13 @@ const Admin = () => {
                 Monitore operações, planeje rotas e analise indicadores em tempo real
               </p>
             </div>
-            <Button onClick={() => navigate('/new-route')} size="lg">
-              <Package className="mr-2 h-5 w-5" />
-              Nova Rota
-            </Button>
+            <div className="flex gap-2">
+              <SeedDataButton />
+              <Button onClick={() => navigate('/new-route')} size="lg">
+                <Package className="mr-2 h-5 w-5" />
+                Nova Rota
+              </Button>
+            </div>
           </div>
 
           {/* KPIs Grid */}
@@ -181,35 +186,21 @@ const Admin = () => {
             </TabsList>
 
             <TabsContent value="monitor" className="space-y-6">
-              {/* Map */}
-              {activeBatches.length > 0 ? (
-                <Card className="p-4">
-                  <div className="h-[400px] rounded-lg overflow-hidden">
-                     <RouteMap
-                       destinations={activeBatches.flatMap(batch => 
-                         batch.deliveries.map(d => ({
-                           lat: d.lat,
-                           lng: d.lng,
-                           label: d.customers?.name || d.address,
-                           sequence: d.sequence
-                         }))
-                       )}
-                     />
-                  </div>
-                </Card>
-              ) : (
-                <Card className="p-4">
-                  <div className="bg-muted/50 rounded-lg h-[400px] flex items-center justify-center">
-                    <div className="text-center">
-                      <AlertCircle className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                      <p className="text-lg font-medium mb-2">Nenhuma rota ativa</p>
-                      <p className="text-sm text-muted-foreground max-w-md">
-                        Crie uma nova rota ou atribua um motorista aos lotes pendentes
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+              {/* Clustered Map */}
+              <ClusteredMap
+                deliveries={activeBatches.flatMap(batch =>
+                  batch.deliveries.map(d => ({
+                    id: d.id,
+                    lat: d.lat,
+                    lng: d.lng,
+                    status: d.status,
+                    address: d.address,
+                    customerName: d.customers?.name,
+                    driverName: batch.driver?.profiles?.[0]?.name,
+                    orderNumber: (d as any).order_number
+                  }))
+                )}
+              />
 
               {/* Active Routes */}
               <div>
