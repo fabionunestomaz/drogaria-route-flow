@@ -1,13 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { MAPBOX_PUBLIC_TOKEN, hasMapboxToken } from '@/lib/mapboxConfig';
+import { getMapboxToken, hasMapboxToken } from '@/lib/mapboxConfig';
 import { Card } from './ui/card';
 import { MapPin } from 'lucide-react';
-
-if (hasMapboxToken()) {
-  mapboxgl.accessToken = MAPBOX_PUBLIC_TOKEN;
-}
+import { useToast } from '@/hooks/use-toast';
 
 interface MapboxMapProps {
   center?: [number, number]; // [lng, lat]
@@ -34,10 +31,34 @@ const MapboxMap = ({
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
+  const [tokenReady, setTokenReady] = useState(false);
+  const { toast } = useToast();
+
+  // Buscar token do Mapbox
+  useEffect(() => {
+    const initToken = async () => {
+      try {
+        const token = await getMapboxToken();
+        if (token) {
+          mapboxgl.accessToken = token;
+          setTokenReady(true);
+        } else {
+          toast({
+            title: "Token Mapbox necessário",
+            description: "Configure o token do Mapbox nas configurações do projeto",
+            variant: "destructive",
+          });
+        }
+      } catch (error) {
+        console.error('Erro ao inicializar token:', error);
+      }
+    };
+    initToken();
+  }, [toast]);
 
   // Inicializar mapa
   useEffect(() => {
-    if (!mapContainer.current || map.current || !hasMapboxToken()) return;
+    if (!mapContainer.current || map.current || !tokenReady) return;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
