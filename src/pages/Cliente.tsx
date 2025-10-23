@@ -12,7 +12,9 @@ import AddressAutocomplete from "@/components/AddressAutocomplete";
 import MapPicker from "@/components/MapPicker";
 import { searchCep, formatAddress } from "@/lib/viaCep";
 import { calculateDistance, geocodeAddress } from "@/lib/mapbox";
+import { calculateRoute as calculateMapboxRoute } from "@/lib/mapboxDirections";
 import { useDeliveryRequests } from "@/hooks/useDeliveryRequests";
+import MapboxMap from "@/components/MapboxMap";
 
 const Cliente = () => {
   const { requests, loading: loadingRequests, createRequest, cancelRequest } = useDeliveryRequests();
@@ -27,22 +29,29 @@ const Cliente = () => {
   const [estimatedTime, setEstimatedTime] = useState<number | null>(null);
   const [price, setPrice] = useState<number | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [routeCoordinates, setRouteCoordinates] = useState<[number, number][] | null>(null);
 
-  const calculateRoute = () => {
+  const calculateRoute = async () => {
     if (originCoords && destCoords) {
-      console.log('📍 Calculando rota:', {
-        origem: { lat: originCoords.lat, lng: originCoords.lng },
-        destino: { lat: destCoords.lat, lng: destCoords.lng }
-      });
-      const dist = calculateDistance(
-        originCoords.lat, originCoords.lng,
-        destCoords.lat, destCoords.lng
+      const routeData = await calculateMapboxRoute(
+        originCoords.lng, originCoords.lat, destCoords.lng, destCoords.lat
       );
-      console.log(`📏 Distância calculada: ${dist.toFixed(2)} km`);
-      setDistance(dist);
-      const time = Math.round(dist / 30 * 60); // 30km/h média
-      setEstimatedTime(time);
-      setPrice(Math.max(10, dist * 3)); // R$ 3/km, mínimo R$ 10
+
+      if (routeData?.routes?.[0]) {
+        const route = routeData.routes[0];
+        const dist = route.distance / 1000;
+        const time = Math.round(route.duration / 60);
+        setDistance(dist);
+        setEstimatedTime(time);
+        setPrice(Math.max(10, dist * 3));
+        setRouteCoordinates(route.geometry.coordinates);
+      } else {
+        const dist = calculateDistance(originCoords.lat, originCoords.lng, destCoords.lat, destCoords.lng);
+        setDistance(dist);
+        setEstimatedTime(Math.round(dist / 30 * 60));
+        setPrice(Math.max(10, dist * 3));
+        setRouteCoordinates(null);
+      }
     }
   };
 

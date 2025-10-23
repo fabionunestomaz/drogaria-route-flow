@@ -63,7 +63,6 @@ const MapboxMap = ({
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
-      pitch: 45,
       center,
       zoom,
     });
