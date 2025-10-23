@@ -14,9 +14,28 @@ serve(async (req) => {
   try {
     const { origin_lng, origin_lat, dest_lng, dest_lat } = await req.json();
 
+    // Validate required parameters
     if (!origin_lng || !origin_lat || !dest_lng || !dest_lat) {
       return new Response(
         JSON.stringify({ error: 'Missing required coordinates' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Parse and validate coordinates
+    const oLng = Number(origin_lng);
+    const oLat = Number(origin_lat);
+    const dLng = Number(dest_lng);
+    const dLat = Number(dest_lat);
+
+    // Validate coordinate ranges
+    if (
+      isNaN(oLng) || isNaN(oLat) || isNaN(dLng) || isNaN(dLat) ||
+      oLng < -180 || oLng > 180 || dLng < -180 || dLng > 180 ||
+      oLat < -90 || oLat > 90 || dLat < -90 || dLat > 90
+    ) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid coordinate values' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -26,7 +45,7 @@ serve(async (req) => {
       throw new Error('MAPBOX_ACCESS_TOKEN not configured');
     }
 
-    const coordinates = `${origin_lng},${origin_lat};${dest_lng},${dest_lat}`;
+    const coordinates = `${oLng},${oLat};${dLng},${dLat}`;
     const url = `https://api.mapbox.com/directions/v5/mapbox/driving/${coordinates}?alternatives=false&overview=full&geometries=geojson&access_token=${mapboxToken}`;
 
     const response = await fetch(url);

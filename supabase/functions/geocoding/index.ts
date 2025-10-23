@@ -15,11 +15,37 @@ serve(async (req) => {
   try {
     const { query, type = 'forward', limit = 5 } = await req.json();
     
-    console.log('Geocoding request:', { query, type, limit });
+    console.log('Geocoding request:', { type, limit });
 
+    // Input validation
     if (!query) {
       return new Response(
         JSON.stringify({ error: 'Query parameter is required' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate query length to prevent DoS
+    if (typeof query !== 'string' || query.length > 500) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid query format or length' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate type parameter
+    if (!['forward', 'reverse'].includes(type)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid type parameter' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Validate limit parameter
+    const parsedLimit = Math.min(Math.max(1, Number(limit) || 5), 10);
+    if (isNaN(parsedLimit)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid limit parameter' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -29,11 +55,20 @@ serve(async (req) => {
     if (type === 'reverse') {
       // Reverse geocoding: coordinates to address
       const [lng, lat] = query.split(',').map(Number);
+      
+      // Validate coordinates
+      if (isNaN(lng) || isNaN(lat) || lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+        return new Response(
+          JSON.stringify({ error: 'Invalid coordinates' }),
+          { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      
       url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?access_token=${MAPBOX_TOKEN}&language=pt-BR&limit=1`;
     } else {
       // Forward geocoding: address to coordinates
       const encodedQuery = encodeURIComponent(query);
-      url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${MAPBOX_TOKEN}&language=pt-BR&country=BR&limit=${limit}`;
+      url = `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodedQuery}.json?access_token=${MAPBOX_TOKEN}&language=pt-BR&country=BR&limit=${parsedLimit}`;
     }
 
     console.log('Calling Mapbox API:', url.replace(MAPBOX_TOKEN || '', 'TOKEN_HIDDEN'));

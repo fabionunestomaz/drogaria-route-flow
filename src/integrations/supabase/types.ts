@@ -228,13 +228,6 @@ export type Database = {
             referencedRelation: "drivers"
             referencedColumns: ["user_id"]
           },
-          {
-            foreignKeyName: "delivery_batches_driver_id_fkey"
-            columns: ["driver_id"]
-            isOneToOne: false
-            referencedRelation: "drivers_public"
-            referencedColumns: ["user_id"]
-          },
         ]
       }
       delivery_requests: {
@@ -730,51 +723,7 @@ export type Database = {
       }
     }
     Views: {
-      drivers_public: {
-        Row: {
-          approved: boolean | null
-          cnh_back_url: string | null
-          cnh_front_url: string | null
-          cnh_number: string | null
-          created_at: string | null
-          id: string | null
-          last_seen_at: string | null
-          plate: string | null
-          selfie_url: string | null
-          shift_status: string | null
-          user_id: string | null
-          vehicle_type: string | null
-        }
-        Insert: {
-          approved?: boolean | null
-          cnh_back_url?: never
-          cnh_front_url?: never
-          cnh_number?: never
-          created_at?: string | null
-          id?: string | null
-          last_seen_at?: string | null
-          plate?: string | null
-          selfie_url?: never
-          shift_status?: string | null
-          user_id?: string | null
-          vehicle_type?: string | null
-        }
-        Update: {
-          approved?: boolean | null
-          cnh_back_url?: never
-          cnh_front_url?: never
-          cnh_number?: never
-          created_at?: string | null
-          id?: string | null
-          last_seen_at?: string | null
-          plate?: string | null
-          selfie_url?: never
-          shift_status?: string | null
-          user_id?: string | null
-          vehicle_type?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       has_role: {

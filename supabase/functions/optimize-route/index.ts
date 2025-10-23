@@ -15,8 +15,28 @@ serve(async (req) => {
   try {
     const { coordinates, destinations } = await req.json();
 
+    // Validate input presence
     if (!coordinates || !destinations) {
       throw new Error('Coordinates and destinations are required');
+    }
+
+    // Validate coordinates format
+    if (typeof coordinates !== 'string' || coordinates.length > 2000) {
+      throw new Error('Invalid coordinates format');
+    }
+
+    // Validate destinations is an array with reasonable size
+    if (!Array.isArray(destinations) || destinations.length === 0 || destinations.length > 25) {
+      throw new Error('Invalid destinations: must be an array with 1-25 items');
+    }
+
+    // Validate each destination has required fields
+    for (const dest of destinations) {
+      if (!dest || typeof dest !== 'object' || 
+          typeof dest.lat !== 'number' || typeof dest.lng !== 'number' ||
+          dest.lat < -90 || dest.lat > 90 || dest.lng < -180 || dest.lng > 180) {
+        throw new Error('Invalid destination coordinates');
+      }
     }
 
     // Usar Mapbox Optimization API

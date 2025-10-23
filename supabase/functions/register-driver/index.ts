@@ -45,6 +45,45 @@ serve(async (req) => {
       });
     }
 
+    // Validate field types and formats
+    if (typeof cnh_number !== 'string' || cnh_number.length < 9 || cnh_number.length > 15) {
+      return new Response(JSON.stringify({ error: 'Invalid CNH number format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate URLs are from storage bucket
+    const validUrls = [cnh_front_url, cnh_back_url, selfie_url].every(url => 
+      typeof url === 'string' && 
+      (url.includes('supabase.co/storage/') || url.startsWith('http'))
+    );
+    
+    if (!validUrls) {
+      return new Response(JSON.stringify({ error: 'Invalid document URLs' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate vehicle type
+    const validVehicleTypes = ['moto', 'carro', 'van', 'bicicleta'];
+    if (!validVehicleTypes.includes(vehicle_type)) {
+      return new Response(JSON.stringify({ error: 'Invalid vehicle type' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Validate plate format (simplified Brazilian format)
+    const plateRegex = /^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/i;
+    if (typeof plate !== 'string' || !plateRegex.test(plate.replace(/[-\s]/g, ''))) {
+      return new Response(JSON.stringify({ error: 'Invalid license plate format' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Inserir na tabela drivers
     const { error: driverError } = await supabase
       .from('drivers')
