@@ -34,6 +34,11 @@ const MapPicker = ({
 
   const handleConfirm = () => {
     if (selectedCoords && selectedAddress) {
+      console.log('🗺️ MapPicker - Coordenadas selecionadas:', {
+        lng: selectedCoords[0],
+        lat: selectedCoords[1],
+        address: selectedAddress
+      });
       onSelect(selectedAddress, selectedCoords);
     }
   };

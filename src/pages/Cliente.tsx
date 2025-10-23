@@ -30,10 +30,15 @@ const Cliente = () => {
 
   const calculateRoute = () => {
     if (originCoords && destCoords) {
+      console.log('📍 Calculando rota:', {
+        origem: { lat: originCoords.lat, lng: originCoords.lng },
+        destino: { lat: destCoords.lat, lng: destCoords.lng }
+      });
       const dist = calculateDistance(
         originCoords.lat, originCoords.lng,
         destCoords.lat, destCoords.lng
       );
+      console.log(`📏 Distância calculada: ${dist.toFixed(2)} km`);
       setDistance(dist);
       const time = Math.round(dist / 30 * 60); // 30km/h média
       setEstimatedTime(time);
@@ -217,6 +222,11 @@ const Cliente = () => {
                   <MapPicker
                     label="Clique no mapa para selecionar a origem"
                     onSelect={(address, coords) => {
+                      console.log('✅ Cliente - Origem selecionada:', {
+                        address,
+                        coordsRecebidas: coords,
+                        coordsSalvas: { lat: coords[1], lng: coords[0] }
+                      });
                       setOrigin(address);
                       setOriginCoords({ lat: coords[1], lng: coords[0] });
                       toast.success("Origem selecionada!");
@@ -227,6 +237,11 @@ const Cliente = () => {
                     label="Clique no mapa para selecionar o destino"
                     initialCenter={[originCoords.lng, originCoords.lat]}
                     onSelect={(address, coords) => {
+                      console.log('✅ Cliente - Destino selecionado:', {
+                        address,
+                        coordsRecebidas: coords,
+                        coordsSalvas: { lat: coords[1], lng: coords[0] }
+                      });
                       setDestination(address);
                       setDestCoords({ lat: coords[1], lng: coords[0] });
                       calculateRoute();
