@@ -53,21 +53,31 @@ export const usePricingConfig = () => {
   };
 
   const updateConfig = async (newConfig: Partial<PricingConfig>) => {
-    if (!user) return;
+    if (!user) {
+      toast.error('Usuário não autenticado');
+      return;
+    }
 
-    const { error } = await supabase
-      .from('delivery_pricing_config')
-      .upsert({
-        user_id: user.id,
-        ...newConfig,
-      });
+    try {
+      const { error } = await supabase
+        .from('delivery_pricing_config')
+        .upsert({
+          user_id: user.id,
+          ...newConfig,
+        }, {
+          onConflict: 'user_id'
+        });
 
-    if (error) {
+      if (error) {
+        console.error('Erro ao salvar configurações:', error);
+        toast.error('Erro ao salvar configurações');
+      } else {
+        toast.success('Configurações salvas com sucesso!');
+        await fetchConfig();
+      }
+    } catch (error) {
+      console.error('Erro ao salvar configurações:', error);
       toast.error('Erro ao salvar configurações');
-      console.error(error);
-    } else {
-      toast.success('Configurações atualizadas!');
-      fetchConfig();
     }
   };
 

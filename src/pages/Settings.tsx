@@ -90,6 +90,8 @@ const Settings = () => {
         phone: settings.phone,
         base_price: settings.basePrice,
         price_per_km: settings.pricePerKm
+      }, {
+        onConflict: 'user_id'
       });
 
     setLoading(false);
