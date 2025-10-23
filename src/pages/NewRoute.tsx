@@ -161,7 +161,7 @@ const NewRoute = () => {
 
     setSaving(false);
     toast.success('Rota criada com sucesso!');
-    navigate('/');
+    navigate('/admin');
   };
 
   return (
