@@ -12,7 +12,7 @@ interface MapPickerProps {
 
 const MapPicker = ({ 
   onSelect, 
-  initialCenter = [-46.6333, -23.5505],
+  initialCenter = [-44.1900, -13.4100],
   label = 'Clique no mapa para selecionar o local'
 }: MapPickerProps) => {
   const [selectedCoords, setSelectedCoords] = useState<[number, number] | null>(null);

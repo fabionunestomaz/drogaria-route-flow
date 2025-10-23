@@ -61,9 +61,9 @@ const RouteMap = ({
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: origin ? [origin.lng, origin.lat] : [-46.6333, -23.5505],
-      zoom: 12,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: origin ? [origin.lng, origin.lat] : [-44.1900, -13.4100],
+      zoom: 13,
       pitch: 45,
     });
 

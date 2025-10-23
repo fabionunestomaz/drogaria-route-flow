@@ -249,25 +249,71 @@ const Cliente = () => {
                     }}
                   />
                 ) : (
-                  <div className="space-y-2">
-                    <p className="text-sm font-medium">Origem: {origin}</p>
-                    <p className="text-sm font-medium">Destino: {destination}</p>
-                    <Button 
-                      type="button"
-                      variant="outline" 
-                      onClick={() => {
-                        setOriginCoords(null);
-                        setDestCoords(null);
-                        setOrigin("");
-                        setDestination("");
-                      }}
-                    >
-                      Selecionar Novamente
-                    </Button>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p className="text-sm font-medium">Origem: {origin}</p>
+                      <p className="text-sm font-medium">Destino: {destination}</p>
+                      <Button 
+                        type="button"
+                        variant="outline" 
+                        onClick={() => {
+                          setOriginCoords(null);
+                          setDestCoords(null);
+                          setOrigin("");
+                          setDestination("");
+                        }}
+                      >
+                        Selecionar Novamente
+                      </Button>
+                    </div>
+
+                    {/* Resumo da rota na aba Mapa */}
+                    <div className="p-4 bg-muted/50 rounded-lg">
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Distância estimada:</span>
+                        <span className="text-muted-foreground">
+                          {distance ? `${distance.toFixed(1)} km` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center mb-2">
+                        <span className="font-medium">Tempo estimado:</span>
+                        <span className="text-muted-foreground">
+                          {estimatedTime ? `${estimatedTime} min` : '--'}
+                        </span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="font-medium text-lg">Valor:</span>
+                        <span className="text-2xl font-bold text-primary">
+                          {price ? `R$ ${price.toFixed(2)}` : 'R$ --'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-2">
+                      <Button 
+                        type="submit" 
+                        className="flex-1 touch-target shadow-glow" 
+                        size="lg"
+                        disabled={!originCoords || !destCoords || isSubmitting}
+                      >
+                        {isSubmitting ? (
+                          <>
+                            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                            Enviando...
+                          </>
+                        ) : (
+                          'Solicitar Entrega'
+                        )}
+                      </Button>
+                      {lastTrackingToken && (
+                        <ShareTrackingButton trackingToken={lastTrackingToken} />
+                      )}
+                    </div>
                   </div>
                 )}
               </TabsContent>
 
+              {/* Resumo da rota nas outras abas */}
               <div className="mt-6 space-y-4">
                 <div className="p-4 bg-muted/50 rounded-lg">
                   <div className="flex justify-between items-center mb-2">

@@ -21,8 +21,8 @@ interface MapboxMapProps {
 }
 
 const MapboxMap = ({
-  center = [-46.6333, -23.5505], // São Paulo como padrão
-  zoom = 12,
+  center = [-44.1900, -13.4100], // São Félix do Coribe - BA
+  zoom = 13,
   markers = [],
   route,
   onMapClick,

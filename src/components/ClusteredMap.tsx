@@ -56,9 +56,9 @@ const ClusteredMap = ({ deliveries, onMarkerClick, className }: ClusteredMapProp
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/dark-v11',
-      center: [-47.8822, -15.7942], // Brasília center
-      zoom: 11,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-44.1900, -13.4100], // São Félix do Coribe - BA
+      zoom: 13,
       pitch: 45,
     });
 
