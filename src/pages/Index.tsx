@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { MapPin, Truck, BarChart3, Clock, Shield, Zap } from "lucide-react";
+import { MapPin, Truck, BarChart3, Clock, Shield, Zap, Plus } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Index = () => {
@@ -73,7 +73,10 @@ const Index = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button size="lg" asChild className="touch-target shadow-glow">
-                <Link to="/cliente">Fazer Pedido</Link>
+                <Link to="/nova-entrega" className="flex items-center gap-2">
+                  <Plus className="w-5 h-5" />
+                  Nova Entrega
+                </Link>
               </Button>
               <Button size="lg" variant="outline" asChild className="touch-target">
                 <Link to="/motoboy">Sou Motoboy</Link>
@@ -138,7 +141,10 @@ const Index = () => {
             Experimente a plataforma mais completa de entregas com rastreamento em tempo real e gestão inteligente de rotas.
           </p>
           <Button size="lg" asChild className="touch-target shadow-glow">
-            <Link to="/cliente">Criar Primeira Entrega</Link>
+            <Link to="/nova-entrega" className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Criar Primeira Entrega
+            </Link>
           </Button>
         </div>
       </section>

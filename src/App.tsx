@@ -22,6 +22,7 @@ import NewRoute from "./pages/NewRoute";
 import RouteDetails from "./pages/RouteDetails";
 import RideTracking from "./pages/RideTracking";
 import Products from "./pages/Products";
+import NewDelivery from "./pages/NewDelivery";
 const queryClient = new QueryClient();
 
 const App = () => {
@@ -92,6 +93,12 @@ const App = () => {
               <Route path="/route-details/:batchId" element={
                 <ProtectedRoute>
                   <RouteDetails />
+                </ProtectedRoute>
+              } />
+              
+              <Route path="/nova-entrega" element={
+                <ProtectedRoute>
+                  <NewDelivery />
                 </ProtectedRoute>
               } />
               
