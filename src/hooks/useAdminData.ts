@@ -57,7 +57,7 @@ export const useAdminData = () => {
           *,
           driver:drivers(
             user_id,
-            profiles(name)
+            profiles!drivers_user_id_fkey(name)
           ),
           deliveries(
             *,
