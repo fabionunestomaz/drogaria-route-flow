@@ -36,7 +36,7 @@ export const useDriverApprovals = () => {
           vehicle_type,
           plate,
           created_at,
-          profiles!drivers_user_id_fkey(name, phone)
+          profiles!drivers_user_id_profiles_fkey(name, phone)
         `)
         .eq('approved', false)
         .order('created_at', { ascending: true });
