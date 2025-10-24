@@ -23,6 +23,7 @@ import Customers from "./pages/Customers";
 import NewRoute from "./pages/NewRoute";
 import RouteDetails from "./pages/RouteDetails";
 import RideTracking from "./pages/RideTracking";
+import BatchTracking from "./pages/BatchTracking";
 import Products from "./pages/Products";
 import NewDelivery from "./pages/NewDelivery";
 const queryClient = new QueryClient();
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/track/:token" element={<TrackingPublic />} />
               <Route path="/ride/:rideId" element={<RideTracking />} />
+              <Route path="/batch-tracking/:batchId" element={<BatchTracking />} />
               <Route path="/products" element={<Products />} />
               
               <Route path="/cliente" element={

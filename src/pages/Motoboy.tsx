@@ -147,7 +147,7 @@ const Motoboy = () => {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Distância Total</p>
-                  <p className="text-2xl font-bold">{(activeBatch.total_distance || 0).toFixed(1)} km</p>
+                  <p className="text-2xl font-bold">{Number(activeBatch.total_distance || 0).toFixed(1)} km</p>
                 </div>
               </div>
               {activeBatch.status === 'assigned' && (

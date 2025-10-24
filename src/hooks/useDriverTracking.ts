@@ -125,9 +125,12 @@ export const useDriverTracking = ({ batchId, enabled }: UseDriverTrackingProps) 
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) {
+          console.error('❌ Not authenticated');
+          setError('Não autenticado');
           throw new Error('Not authenticated');
         }
 
+        console.log('🔌 Connecting to WebSocket:', `${WS_URL}?batch_id=${batchId}&role=driver`);
         ws = new WebSocket(`${WS_URL}?batch_id=${batchId}&role=driver`);
         wsRef.current = ws;
 

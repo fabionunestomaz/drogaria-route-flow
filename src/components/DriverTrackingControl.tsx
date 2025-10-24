@@ -17,6 +17,8 @@ const DriverTrackingControl = ({ batchId, className }: DriverTrackingControlProp
     batchId,
     enabled: trackingEnabled
   });
+  
+  console.log('DriverTrackingControl - batchId:', batchId, 'enabled:', trackingEnabled, 'connected:', connected, 'error:', error);
 
   const handleToggleTracking = () => {
     setTrackingEnabled(!trackingEnabled);
